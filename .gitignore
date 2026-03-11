@@ -1,0 +1,16 @@
+# Build output
+ErroresProyecto/build/
+ErroresProyecto/dist/
+
+# NetBeans private config
+ErroresProyecto/nbproject/private/
+
+# Downloaded libraries
+ErroresProyecto/lib/
+
+# IDE files
+*.class
+*.jar
+*.war
+*.ear
+
