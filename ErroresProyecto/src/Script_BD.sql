@@ -19,3 +19,5 @@ CREATE TABLE usuarios (
     password VARCHAR(50) NOT NULL,
     PRIMARY KEY (id)
 );
+
+INSERT INTO usuarios (username, password) VALUES ('admin', 'admin123');
