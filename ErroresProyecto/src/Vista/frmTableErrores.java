@@ -148,6 +148,8 @@ public class frmTableErrores extends javax.swing.JFrame {
             faseSeleccionada = Fase.PROCESO;
         } else if (index == 2) {
             faseSeleccionada = Fase.SOLUCIONADO;
+        } else if (index == 3) {
+            faseSeleccionada = Fase.CERRADO;
         }
 
         // Crear objeto ErrorTicket y actualizar
@@ -285,7 +287,7 @@ public class frmTableErrores extends javax.swing.JFrame {
         jLabel1.setText("Fase");
 
         cboFase.setFont(new java.awt.Font("Trebuchet MS", 1, 12)); // NOI18N
-        cboFase.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Registrado", "Proceso", "Solucionado" }));
+        cboFase.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Registrado", "Proceso", "Solucionado", "Cerrado" }));
 
         jLabel2.setFont(new java.awt.Font("Trebuchet MS", 1, 24)); // NOI18N
         jLabel2.setText("Errores");
