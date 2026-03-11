@@ -103,7 +103,7 @@ public class frmTableErrores extends javax.swing.JFrame {
     int fila = jTable1.getSelectedRow();
     if (fila >= 0) { //Verifica que exista una fila en la tabla
         // Cargar la fase usando IF
-        Object faseTabla = jTable1.getValueAt(fila, 5); // Fase sigue siendo columna 4
+        Object faseTabla = jTable1.getValueAt(fila, 4); // Fase es columna 4
         if (faseTabla != null) {
             
            //Asigna la fase dependiendo de la fase seleccionada del combobox
