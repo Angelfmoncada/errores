@@ -195,6 +195,12 @@ public class FrmRegistrarError extends javax.swing.JFrame {
             return;
         }
 
+        //Validación de longitud máxima del título (100 caracteres en BD)
+        if (txtTitulo.getText().trim().length() > 100) {
+            JOptionPane.showMessageDialog(this, "El título no puede exceder 100 caracteres");
+            return;
+        }
+
         //Trae la Severidad del ComboBox
         int index = cboSeveridad.getSelectedIndex();
         Modelo.Severidad sev;
