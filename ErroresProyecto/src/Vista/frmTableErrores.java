@@ -66,11 +66,9 @@ public class frmTableErrores extends javax.swing.JFrame {
     }
 
     private void agregarEventos() {
-        
+
         //Evento que se activa cuando se selecciona una fila y se muestran los datos
         jTable1.getSelectionModel().addListSelectionListener(e -> cargarDatosSeleccion());
-        btnGuardar.addActionListener(e -> guardarCambios());
-        btnSalir.addActionListener(e -> dispose()); // botón salir
     }
     //Carga los datos de la tabla 
     private void cargarTabla() {
@@ -422,9 +420,7 @@ public class frmTableErrores extends javax.swing.JFrame {
     }//GEN-LAST:event_btnSalirActionPerformed
 
     private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
-            
-        
-            
+        guardarCambios();
         // TODO add your handling code here:
     }//GEN-LAST:event_btnGuardarActionPerformed
 
