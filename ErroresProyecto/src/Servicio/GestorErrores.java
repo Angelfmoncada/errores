@@ -4,7 +4,6 @@ import Modelo.ErrorTicket;
 import Dao.ErrorDAO;
 
 import java.util.List;
-import Modelo.ErrorTicket;
 
 /**
  * Clase de servicio que gestiona los errores.
