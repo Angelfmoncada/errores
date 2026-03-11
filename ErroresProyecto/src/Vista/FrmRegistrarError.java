@@ -285,9 +285,6 @@ public class FrmRegistrarError extends javax.swing.JFrame {
         txtTitulo.setText("");
         txtDescripcion.setText("");
         cboSeveridad.setSelectedIndex(0);
-        
-        
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 
    
