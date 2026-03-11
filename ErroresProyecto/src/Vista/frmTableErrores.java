@@ -108,12 +108,14 @@ public class frmTableErrores extends javax.swing.JFrame {
             
            //Asigna la fase dependiendo de la fase seleccionada del combobox
             String faseStr = faseTabla.toString();
-            if (faseStr.equals("Registrado")) {
+            if (faseStr.equals("REGISTRADO")) {
                 cboFase.setSelectedIndex(0);
-            } else if (faseStr.equals("Proceso")) {
+            } else if (faseStr.equals("PROCESO")) {
                 cboFase.setSelectedIndex(1);
-            } else if (faseStr.equals("Solucionado")) {
+            } else if (faseStr.equals("SOLUCIONADO")) {
                 cboFase.setSelectedIndex(2);
+            } else if (faseStr.equals("CERRADO")) {
+                cboFase.setSelectedIndex(3);
             }
         }
 
