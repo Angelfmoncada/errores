@@ -94,6 +94,53 @@ public class ErrorDAO {
     }
 
     /**
+     * Busca errores por titulo y/o fase.
+     */
+    public List<ErrorTicket> buscar(String titulo, String fase) {
+        List<ErrorTicket> lista = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+            "SELECT id, titulo, descripcion, severidad, fase, fecha, solucion FROM errores WHERE 1=1");
+
+        if (titulo != null && !titulo.isEmpty()) {
+            sql.append(" AND titulo LIKE ?");
+        }
+        if (fase != null && !fase.isEmpty()) {
+            sql.append(" AND fase = ?");
+        }
+
+        try (Connection con = ConexionBD.conectar();
+             PreparedStatement ps = con.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+            if (titulo != null && !titulo.isEmpty()) {
+                ps.setString(paramIndex++, "%" + titulo + "%");
+            }
+            if (fase != null && !fase.isEmpty()) {
+                ps.setString(paramIndex, fase);
+            }
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                ErrorTicket e = new ErrorTicket(
+                    rs.getString("titulo"),
+                    rs.getString("descripcion"),
+                    Severidad.valueOf(rs.getString("severidad")),
+                    Fase.valueOf(rs.getString("fase"))
+                );
+                e.setId(rs.getInt("id"));
+                e.setFecha(rs.getTimestamp("fecha"));
+                e.setSolucion(rs.getString("solucion"));
+                lista.add(e);
+            }
+
+        } catch (SQLException ex) {
+            System.out.println("Error al buscar: " + ex.getMessage());
+        }
+
+        return lista;
+    }
+
+    /**
      * Elimina un error de la base de datos por su ID.
      */
     public void eliminar(int id) {

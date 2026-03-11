@@ -44,6 +44,13 @@ public class GestorErrores {
     }
 
     /**
+     * Busca errores por titulo y/o fase.
+     */
+    public List<ErrorTicket> buscarErrores(String titulo, String fase) {
+        return errorDAO.buscar(titulo, fase);
+    }
+
+    /**
      * Elimina un error de la base de datos por su ID.
      */
     public void eliminarError(int id) {

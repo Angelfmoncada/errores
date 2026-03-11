@@ -23,6 +23,9 @@ public class frmTableErrores extends javax.swing.JFrame {
     
     private DefaultTableModel modeloTabla;
     private javax.swing.JButton btnEliminar;
+    private javax.swing.JTextField txtBuscar;
+    private javax.swing.JComboBox<String> cboFiltroFase;
+    private javax.swing.JButton btnBuscar;
 
     /**
      * Creates new form frmTableErrores
@@ -56,6 +59,26 @@ public class frmTableErrores extends javax.swing.JFrame {
         btnEliminar.setText("Eliminar");
         btnEliminar.addActionListener(e -> eliminarError());
         jPanel1.add(btnEliminar);
+
+        txtBuscar = new javax.swing.JTextField(15);
+        txtBuscar.setFont(new java.awt.Font("Trebuchet MS", 0, 14));
+        cboFiltroFase = new javax.swing.JComboBox<>(new String[]{"Todas", "REGISTRADO", "PROCESO", "SOLUCIONADO", "CERRADO"});
+        cboFiltroFase.setFont(new java.awt.Font("Trebuchet MS", 1, 12));
+        btnBuscar = new javax.swing.JButton();
+        btnBuscar.setBackground(new java.awt.Color(0, 0, 102));
+        btnBuscar.setFont(new java.awt.Font("Trebuchet MS", 1, 12));
+        btnBuscar.setForeground(new java.awt.Color(255, 255, 255));
+        btnBuscar.setText("Buscar");
+        btnBuscar.addActionListener(e -> buscarErrores());
+
+        javax.swing.JPanel panelBusqueda = new javax.swing.JPanel();
+        panelBusqueda.setBackground(new java.awt.Color(204, 204, 204));
+        panelBusqueda.add(new javax.swing.JLabel("Buscar:"));
+        panelBusqueda.add(txtBuscar);
+        panelBusqueda.add(new javax.swing.JLabel("Fase:"));
+        panelBusqueda.add(cboFiltroFase);
+        panelBusqueda.add(btnBuscar);
+        getContentPane().add(panelBusqueda, java.awt.BorderLayout.NORTH);
 
         configurarTabla();
         cargarTabla();
@@ -175,6 +198,28 @@ public class frmTableErrores extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(this, "Error actualizado correctamente");
         //Actualiza los datos de la tabla
         cargarTabla();
+    }
+
+    //Busca errores por titulo y fase
+    private void buscarErrores() {
+        String titulo = txtBuscar.getText().trim();
+        String fase = (String) cboFiltroFase.getSelectedItem();
+        if ("Todas".equals(fase)) {
+            fase = null;
+        }
+
+        modeloTabla.setRowCount(0);
+        List<ErrorTicket> errores = new GestorErrores().buscarErrores(titulo, fase);
+        for (ErrorTicket e : errores) {
+            modeloTabla.addRow(new Object[]{
+                    e.getId(),
+                    e.getTitulo(),
+                    e.getDescripcion(),
+                    e.getSeveridad(),
+                    e.getFase(),
+                    e.getSolucion()
+            });
+        }
     }
 
     //Elimina el error seleccionado de la tabla y la base de datos
