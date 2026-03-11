@@ -11,7 +11,7 @@ import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 import Modelo.ErrorTicket;
-import servicio.GestorErrores;
+import Servicio.GestorErrores;
 
 /**
  *

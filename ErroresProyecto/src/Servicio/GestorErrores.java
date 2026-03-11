@@ -1,4 +1,4 @@
-package servicio;
+package Servicio;
 
 import Modelo.ErrorTicket;
 import Dao.ErrorDAO;

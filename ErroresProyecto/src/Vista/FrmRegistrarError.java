@@ -7,7 +7,7 @@ import Modelo.Fase;
 import Modelo.Severidad;
 import javax.swing.JOptionPane;
 import Modelo.ErrorTicket;
-import servicio.GestorErrores;
+import Servicio.GestorErrores;
 
 /**
  *
