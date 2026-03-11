@@ -224,8 +224,12 @@ String pass = new String(txtPassword.getPassword()).trim();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void btnSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalirActionPerformed
-
+        int confirmacion = javax.swing.JOptionPane.showConfirmDialog(this,
+                "¿Está seguro de que desea salir?", "Confirmar salida",
+                javax.swing.JOptionPane.YES_NO_OPTION);
+        if (confirmacion == javax.swing.JOptionPane.YES_OPTION) {
             System.exit(0);
+        }
             // TODO add your handling code here:
     }//GEN-LAST:event_btnSalirActionPerformed
 

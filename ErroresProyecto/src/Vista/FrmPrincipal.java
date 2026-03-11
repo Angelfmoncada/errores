@@ -117,7 +117,12 @@ public class FrmPrincipal extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalirActionPerformed
-     System.exit(0);   // TODO add your handling code here:
+        int confirmacion = javax.swing.JOptionPane.showConfirmDialog(this,
+                "¿Está seguro de que desea salir?", "Confirmar salida",
+                javax.swing.JOptionPane.YES_NO_OPTION);
+        if (confirmacion == javax.swing.JOptionPane.YES_OPTION) {
+            System.exit(0);
+        }
     }//GEN-LAST:event_btnSalirActionPerformed
 
     private void btnErrores1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnErrores1ActionPerformed

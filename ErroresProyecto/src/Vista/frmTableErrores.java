@@ -493,8 +493,12 @@ public class frmTableErrores extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalirActionPerformed
-    
-        System.exit(0);
+        int confirmacion = JOptionPane.showConfirmDialog(this,
+                "¿Está seguro de que desea salir?", "Confirmar salida",
+                JOptionPane.YES_NO_OPTION);
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            System.exit(0);
+        }
         // TODO add your handling code here:
     }//GEN-LAST:event_btnSalirActionPerformed
 
