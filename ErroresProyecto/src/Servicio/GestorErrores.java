@@ -42,5 +42,12 @@ public class GestorErrores {
     public void actualizarError(ErrorTicket e) {
         errorDAO.actualizar(e);
     }
+
+    /**
+     * Elimina un error de la base de datos por su ID.
+     */
+    public void eliminarError(int id) {
+        errorDAO.eliminar(id);
+    }
 }
 

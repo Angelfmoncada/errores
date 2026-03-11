@@ -22,6 +22,7 @@ public class frmTableErrores extends javax.swing.JFrame {
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(frmTableErrores.class.getName());
     
     private DefaultTableModel modeloTabla;
+    private javax.swing.JButton btnEliminar;
 
     /**
      * Creates new form frmTableErrores
@@ -48,6 +49,14 @@ public class frmTableErrores extends javax.swing.JFrame {
         txtSolucion.setVisible(false);  // Oculto por defecto
         lblSolucion.setVisible(false);
         
+        btnEliminar = new javax.swing.JButton();
+        btnEliminar.setBackground(new java.awt.Color(153, 0, 0));
+        btnEliminar.setFont(new java.awt.Font("Trebuchet MS", 1, 14));
+        btnEliminar.setForeground(new java.awt.Color(255, 255, 255));
+        btnEliminar.setText("Eliminar");
+        btnEliminar.addActionListener(e -> eliminarError());
+        jPanel1.add(btnEliminar);
+
         configurarTabla();
         cargarTabla();
         agregarEventos();
@@ -168,7 +177,27 @@ public class frmTableErrores extends javax.swing.JFrame {
         cargarTabla();
     }
 
-    /*  private void initComponents() {
+    //Elimina el error seleccionado de la tabla y la base de datos
+    private void eliminarError() {
+        int fila = jTable1.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione un error de la tabla");
+            return;
+        }
+
+        int confirmacion = JOptionPane.showConfirmDialog(this,
+                "¿Está seguro de eliminar este error?", "Confirmar eliminación",
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            int id = (int) jTable1.getValueAt(fila, 0);
+            new GestorErrores().eliminarError(id);
+            JOptionPane.showMessageDialog(this, "Error eliminado correctamente");
+            cargarTabla();
+        }
+    }
+
+/*  private void initComponents() {
         jPanel1 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
@@ -350,7 +379,9 @@ public class frmTableErrores extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(34, 34, 34)
                 .addComponent(btnGuardar)
-                .addGap(33, 33, 33)
+                .addGap(18, 18, 18)
+                .addComponent(btnEliminar)
+                .addGap(18, 18, 18)
                 .addComponent(btnRegresarPrin)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(btnSalir)
@@ -394,6 +425,7 @@ public class frmTableErrores extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnRegresarPrin)
                     .addComponent(btnGuardar)
+                    .addComponent(btnEliminar)
                     .addComponent(btnSalir))
                 .addGap(32, 32, 32)
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))

@@ -92,5 +92,22 @@ public class ErrorDAO {
             System.out.println("Error al actualizar: " + ex.getMessage());
         }
     }
+
+    /**
+     * Elimina un error de la base de datos por su ID.
+     */
+    public void eliminar(int id) {
+        String sql = "DELETE FROM errores WHERE id = ?";
+
+        try (Connection con = ConexionBD.conectar();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            ps.executeUpdate();
+
+        } catch (SQLException ex) {
+            System.out.println("Error al eliminar: " + ex.getMessage());
+        }
+    }
 }
 
