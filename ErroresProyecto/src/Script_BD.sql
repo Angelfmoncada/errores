@@ -9,7 +9,7 @@ CREATE TABLE errores (
     severidad VARCHAR(20) NOT NULL,
     fase VARCHAR(20) NOT NULL,
     solucion TEXT,
-    fecha DATE,
+    fecha DATE DEFAULT (CURRENT_DATE),
     PRIMARY KEY (id)
 );
 
