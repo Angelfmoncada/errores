@@ -16,8 +16,8 @@ CREATE TABLE errores (
 CREATE TABLE usuarios (
     id INT(11) NOT NULL AUTO_INCREMENT,
     username VARCHAR(50) NOT NULL,
-    password VARCHAR(50) NOT NULL,
+    password VARCHAR(64) NOT NULL,
     PRIMARY KEY (id)
 );
 
-INSERT INTO usuarios (username, password) VALUES ('admin', 'admin123');
+INSERT INTO usuarios (username, password) VALUES ('admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9');
