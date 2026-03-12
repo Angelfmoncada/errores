@@ -32,33 +32,34 @@ public class frmTableErrores extends javax.swing.JFrame {
      */
     public  frmTableErrores() {
         //this.setUndecorated(true);
-        initComponents();
-        Utilidades.Icono.setLogotipo(this);
-        this.setLocationRelativeTo(null);
-        
-        
-        //Evento de activar txtSolución solo si el ComboBox está en "Solucionado"
-          cboFase.addActionListener(e -> {
-        String faseSeleccionada = (String) cboFase.getSelectedItem();
-        boolean mostrarSolucion = faseSeleccionada.equals("Solucionado");
 
-        txtSolucion.setVisible(mostrarSolucion);
-        lblSolucion.setVisible(mostrarSolucion); 
-        if (!mostrarSolucion) {
-            txtSolucion.setText(""); 
-        }
-    });
-        
-        txtSolucion.setVisible(false);  // Oculto por defecto
-        lblSolucion.setVisible(false);
-        
+        // Crear btnEliminar antes de initComponents porque el GroupLayout lo referencia
         btnEliminar = new javax.swing.JButton();
         btnEliminar.setBackground(new java.awt.Color(153, 0, 0));
         btnEliminar.setFont(new java.awt.Font("Trebuchet MS", 1, 14));
         btnEliminar.setForeground(new java.awt.Color(255, 255, 255));
         btnEliminar.setText("Eliminar");
         btnEliminar.addActionListener(e -> eliminarError());
-        jPanel1.add(btnEliminar);
+
+        initComponents();
+        Utilidades.Icono.setLogotipo(this);
+        this.setLocationRelativeTo(null);
+
+
+        //Evento de activar txtSolución solo si el ComboBox está en "Solucionado"
+          cboFase.addActionListener(e -> {
+        String faseSeleccionada = (String) cboFase.getSelectedItem();
+        boolean mostrarSolucion = faseSeleccionada.equals("Solucionado");
+
+        txtSolucion.setVisible(mostrarSolucion);
+        lblSolucion.setVisible(mostrarSolucion);
+        if (!mostrarSolucion) {
+            txtSolucion.setText("");
+        }
+    });
+
+        txtSolucion.setVisible(false);  // Oculto por defecto
+        lblSolucion.setVisible(false);
 
         txtBuscar = new javax.swing.JTextField(15);
         txtBuscar.setFont(new java.awt.Font("Trebuchet MS", 0, 14));
