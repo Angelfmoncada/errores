@@ -21,6 +21,7 @@ public class FrmPrincipal extends javax.swing.JFrame {
 
 
     @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
@@ -105,28 +106,28 @@ public class FrmPrincipal extends javax.swing.JFrame {
         );
 
         pack();
-    }
+    }// </editor-fold>//GEN-END:initComponents
 
-    private void btnSalirActionPerformed(java.awt.event.ActionEvent evt) {
+    private void btnSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalirActionPerformed
         int confirmacion = javax.swing.JOptionPane.showConfirmDialog(this,
                 "¿Está seguro de que desea salir?", "Confirmar salida",
                 javax.swing.JOptionPane.YES_NO_OPTION);
         if (confirmacion == javax.swing.JOptionPane.YES_OPTION) {
             System.exit(0);
         }
-    }
+    }//GEN-LAST:event_btnSalirActionPerformed
 
-    private void btnErrores1ActionPerformed(java.awt.event.ActionEvent evt) {
+    private void btnErrores1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnErrores1ActionPerformed
         
             new frmTableErrores().setVisible(true);
             this.dispose();
-    }
+    }//GEN-LAST:event_btnErrores1ActionPerformed
 
-    private void btnRegistrarError1ActionPerformed(java.awt.event.ActionEvent evt) {
+    private void btnRegistrarError1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegistrarError1ActionPerformed
 
  new FrmRegistrarError().setVisible(true);
  this.dispose();
-    }
+    }//GEN-LAST:event_btnRegistrarError1ActionPerformed
 
     public static void main(String args[]) {
         try {
@@ -143,10 +144,11 @@ public class FrmPrincipal extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(() -> new FrmPrincipal().setVisible(true));
     }
 
-    // Variables declaration
+    // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnErrores1;
     private javax.swing.JButton btnRegistrarError1;
     private javax.swing.JButton btnSalir;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel lblFondoRegistrar;
+    // End of variables declaration//GEN-END:variables
 }
