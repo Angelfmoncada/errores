@@ -22,7 +22,6 @@ public class frmTableErrores extends javax.swing.JFrame {
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(frmTableErrores.class.getName());
     
     private DefaultTableModel modeloTabla;
-    private javax.swing.JButton btnEliminar;
     private javax.swing.JTextField txtBuscar;
     private javax.swing.JComboBox<String> cboFiltroFase;
     private javax.swing.JButton btnBuscar;
@@ -32,15 +31,6 @@ public class frmTableErrores extends javax.swing.JFrame {
      */
     public  frmTableErrores() {
         //this.setUndecorated(true);
-
-        // Crear btnEliminar antes de initComponents porque el GroupLayout lo referencia
-        btnEliminar = new javax.swing.JButton();
-        btnEliminar.setBackground(new java.awt.Color(153, 0, 0));
-        btnEliminar.setFont(new java.awt.Font("Trebuchet MS", 1, 14));
-        btnEliminar.setForeground(new java.awt.Color(255, 255, 255));
-        btnEliminar.setText("Eliminar");
-        btnEliminar.addActionListener(e -> eliminarError());
-
         initComponents();
         Utilidades.Icono.setLogotipo(this);
         this.setLocationRelativeTo(null);
@@ -265,6 +255,7 @@ public class frmTableErrores extends javax.swing.JFrame {
         txtSolucion = new javax.swing.JTextArea();
         btnSalir = new javax.swing.JButton();
         btnGuardar = new javax.swing.JButton();
+        btnEliminar = new javax.swing.JButton();
         btnRegresarPrin = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         jPanel4 = new javax.swing.JPanel();
@@ -313,6 +304,12 @@ public class frmTableErrores extends javax.swing.JFrame {
         btnGuardar.setForeground(new java.awt.Color(255, 255, 255));
         btnGuardar.setText("Guardar");
         btnGuardar.addActionListener(this::btnGuardarActionPerformed);
+
+        btnEliminar.setBackground(new java.awt.Color(153, 0, 0));
+        btnEliminar.setFont(new java.awt.Font("Trebuchet MS", 1, 14)); // NOI18N
+        btnEliminar.setForeground(new java.awt.Color(255, 255, 255));
+        btnEliminar.setText("Eliminar");
+        btnEliminar.addActionListener(e -> eliminarError());
 
         btnRegresarPrin.setBackground(new java.awt.Color(255, 51, 51));
         btnRegresarPrin.setFont(new java.awt.Font("Trebuchet MS", 1, 14)); // NOI18N
@@ -469,6 +466,7 @@ public class frmTableErrores extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnEliminar;
     private javax.swing.JButton btnGuardar;
     private javax.swing.JButton btnRegresarPrin;
     private javax.swing.JButton btnSalir;
