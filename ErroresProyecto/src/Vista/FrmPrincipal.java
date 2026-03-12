@@ -126,6 +126,7 @@ public class FrmPrincipal extends javax.swing.JFrame {
 
  new FrmRegistrarError().setVisible(true);
  this.dispose();
+    }
 
     public static void main(String args[]) {
         try {

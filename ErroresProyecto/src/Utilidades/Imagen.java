@@ -16,18 +16,22 @@ import javax.swing.JLabel;
 public class Imagen {
     
     public static void ponerImagenEnLabel(JLabel label, String ruta) {
-        // 1. Cargamos la imagen original
-        ImageIcon originalIcon = new ImageIcon(Imagen.class.getResource(ruta));
-        
-        // 2. Escalamos la imagen al ancho y alto del JLabel
-        // Image.SCALE_SMOOTH es clave para que no se vea pixelada
-        Image escalada = originalIcon.getImage().getScaledInstance(
-                label.getWidth(), 
-                label.getHeight(), 
-                Image.SCALE_SMOOTH
-        );
-        
-        // 3. Creamos el nuevo icono y lo asignamos
+        java.net.URL recurso = Imagen.class.getResource(ruta);
+        if (recurso == null) {
+            System.err.println("No se encontró la imagen: " + ruta);
+            return;
+        }
+
+        ImageIcon originalIcon = new ImageIcon(recurso);
+
+        int ancho = label.getWidth() > 0 ? label.getWidth() : label.getPreferredSize().width;
+        int alto = label.getHeight() > 0 ? label.getHeight() : label.getPreferredSize().height;
+        if (ancho <= 0 || alto <= 0) {
+            label.setIcon(originalIcon);
+            return;
+        }
+
+        Image escalada = originalIcon.getImage().getScaledInstance(ancho, alto, Image.SCALE_SMOOTH);
         Icon iconoFinal = new ImageIcon(escalada);
         label.setIcon(iconoFinal);
     }
