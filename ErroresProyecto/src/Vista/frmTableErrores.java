@@ -6,12 +6,17 @@ package Vista;
 
 import Modelo.Fase;
 import Modelo.Severidad;
-import java.util.List;
-import javax.swing.JOptionPane;
-import javax.swing.ListSelectionModel;
-import javax.swing.table.DefaultTableModel;
 import Modelo.ErrorTicket;
 import Servicio.GestorErrores;
+import Utilidades.ImagenCaptura;
+import java.util.List;
+import javax.swing.ImageIcon;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -25,6 +30,7 @@ public class frmTableErrores extends javax.swing.JFrame {
     private javax.swing.JTextField txtBuscar;
     private javax.swing.JComboBox<String> cboFiltroFase;
     private javax.swing.JButton btnBuscar;
+    private javax.swing.JButton btnVerCaptura;
 
     /**
      * Creates new form frmTableErrores
@@ -62,6 +68,12 @@ public class frmTableErrores extends javax.swing.JFrame {
         btnBuscar.setText("Buscar");
         btnBuscar.addActionListener(e -> buscarErrores());
 
+        btnVerCaptura = new javax.swing.JButton("Ver Captura");
+        btnVerCaptura.setBackground(new java.awt.Color(0, 102, 0));
+        btnVerCaptura.setFont(new java.awt.Font("Trebuchet MS", 1, 12));
+        btnVerCaptura.setForeground(new java.awt.Color(255, 255, 255));
+        btnVerCaptura.addActionListener(e -> verCaptura());
+
         javax.swing.JPanel panelBusqueda = new javax.swing.JPanel();
         panelBusqueda.setBackground(new java.awt.Color(204, 204, 204));
         panelBusqueda.add(new javax.swing.JLabel("Buscar:"));
@@ -69,6 +81,7 @@ public class frmTableErrores extends javax.swing.JFrame {
         panelBusqueda.add(new javax.swing.JLabel("Fase:"));
         panelBusqueda.add(cboFiltroFase);
         panelBusqueda.add(btnBuscar);
+        panelBusqueda.add(btnVerCaptura);
         getContentPane().add(panelBusqueda, java.awt.BorderLayout.NORTH);
 
         configurarTabla();
@@ -227,6 +240,51 @@ public class frmTableErrores extends javax.swing.JFrame {
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
                 "Error al buscar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    //Muestra la captura de pantalla del error seleccionado
+    private void verCaptura() {
+        int fila = jTable1.getSelectedRow();
+        if (fila < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione un error de la tabla");
+            return;
+        }
+
+        // Obtener el error completo para acceder a la captura
+        int id = (int) jTable1.getValueAt(fila, 0);
+        try {
+            List<ErrorTicket> errores = new GestorErrores().obtenerTodosErrores();
+            ErrorTicket errorSel = null;
+            for (ErrorTicket e : errores) {
+                if (e.getId() == id) {
+                    errorSel = e;
+                    break;
+                }
+            }
+
+            if (errorSel == null || errorSel.getCapturaError() == null || errorSel.getCapturaError().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Este error no tiene captura adjunta");
+                return;
+            }
+
+            ImageIcon imagen = ImagenCaptura.cargarImagenCompleta(errorSel.getCapturaError(), 800, 600);
+            if (imagen == null) {
+                JOptionPane.showMessageDialog(this, "No se pudo cargar la imagen: " + errorSel.getCapturaError());
+                return;
+            }
+
+            // Mostrar en un diálogo
+            JDialog dialogo = new JDialog(this, "Captura del Error: " + errorSel.getTitulo(), true);
+            JLabel lblImagen = new JLabel(imagen);
+            JScrollPane scroll = new JScrollPane(lblImagen);
+            dialogo.add(scroll);
+            dialogo.setSize(850, 650);
+            dialogo.setLocationRelativeTo(this);
+            dialogo.setVisible(true);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                "Error al cargar captura: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 

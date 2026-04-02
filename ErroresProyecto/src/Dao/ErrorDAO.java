@@ -19,8 +19,8 @@ public class ErrorDAO {
      * Inserta un nuevo error en la base de datos.
      */
     public void insertar(ErrorTicket e) {
-        String sql = "INSERT INTO errores (titulo, descripcion, severidad, fase, solucion) " +
-                     "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO errores (titulo, descripcion, severidad, fase, solucion, captura_error) " +
+                     "VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection con = ConexionBD.conectar();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -29,6 +29,7 @@ public class ErrorDAO {
             ps.setString(3, e.getSeveridad().name());
             ps.setString(4, e.getFase().name());
             ps.setString(5, e.getSolucion());
+            ps.setString(6, e.getCapturaError());
             ps.executeUpdate();
 
         } catch (SQLException ex) {
@@ -42,7 +43,7 @@ public class ErrorDAO {
     public List<ErrorTicket> obtenerTodos() {
         List<ErrorTicket> lista = new ArrayList<>();
         String sql = "SELECT id, titulo, descripcion, severidad, fase, fecha, solucion, " +
-                     "resuelto_por, fecha_solucion FROM errores";
+                     "resuelto_por, fecha_solucion, captura_error FROM errores";
 
         try (Connection con = ConexionBD.conectar();
              Statement st = con.createStatement();
@@ -60,6 +61,7 @@ public class ErrorDAO {
                 e.setSolucion(rs.getString("solucion"));
                 e.setResueltoPor(rs.getString("resuelto_por"));
                 e.setFechaSolucion(rs.getTimestamp("fecha_solucion"));
+                e.setCapturaError(rs.getString("captura_error"));
                 lista.add(e);
             }
 
@@ -98,7 +100,7 @@ public class ErrorDAO {
         List<ErrorTicket> lista = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
             "SELECT id, titulo, descripcion, severidad, fase, fecha, solucion, " +
-            "resuelto_por, fecha_solucion FROM errores WHERE 1=1");
+            "resuelto_por, fecha_solucion, captura_error FROM errores WHERE 1=1");
 
         if (titulo != null && !titulo.isEmpty()) {
             sql.append(" AND titulo LIKE ?");
@@ -131,6 +133,7 @@ public class ErrorDAO {
                 e.setSolucion(rs.getString("solucion"));
                 e.setResueltoPor(rs.getString("resuelto_por"));
                 e.setFechaSolucion(rs.getTimestamp("fecha_solucion"));
+                e.setCapturaError(rs.getString("captura_error"));
                 lista.add(e);
             }
 

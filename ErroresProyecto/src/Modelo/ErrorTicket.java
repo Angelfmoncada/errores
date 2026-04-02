@@ -87,4 +87,16 @@ public class ErrorTicket {
     public void setFechaSolucion(Timestamp fechaSolucion) {
         this.fechaSolucion = fechaSolucion;
     }
+
+    // --- Captura de pantalla ---
+
+    private String capturaError;
+
+    public String getCapturaError() {
+        return capturaError;
+    }
+
+    public void setCapturaError(String capturaError) {
+        this.capturaError = capturaError;
+    }
 }

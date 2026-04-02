@@ -5,29 +5,77 @@
 package Vista;
 import Modelo.Fase;
 import Modelo.Severidad;
-import javax.swing.JOptionPane;
 import Modelo.ErrorTicket;
 import Servicio.GestorErrores;
+import Utilidades.ImagenCaptura;
+import java.io.File;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  *
  * @author Mass
  */
 public class FrmRegistrarError extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmRegistrarError.class.getName());
 
-    /**
-     * Creates new form FrmRegistrarError
-     */
+    private File archivoCaptura; // Archivo de captura seleccionado
+    private javax.swing.JButton btnAdjuntarCaptura;
+    private javax.swing.JLabel lblCaptura;
+    private javax.swing.JLabel lblPreviewCaptura;
+
     public FrmRegistrarError() {
-         //this.setUndecorated(true); 
         initComponents();
         Utilidades.Icono.setLogotipo(this);
-         this.setLocationRelativeTo(null);
-        
-        
-       
+        this.setLocationRelativeTo(null);
+        agregarComponentesCaptura();
+    }
+
+    private void agregarComponentesCaptura() {
+        lblCaptura = new javax.swing.JLabel("Captura:");
+        lblCaptura.setFont(new java.awt.Font("Trebuchet MS", 1, 14));
+
+        btnAdjuntarCaptura = new javax.swing.JButton("Adjuntar Captura");
+        btnAdjuntarCaptura.setBackground(new java.awt.Color(0, 102, 0));
+        btnAdjuntarCaptura.setFont(new java.awt.Font("Trebuchet MS", 1, 12));
+        btnAdjuntarCaptura.setForeground(new java.awt.Color(255, 255, 255));
+        btnAdjuntarCaptura.addActionListener(e -> seleccionarCaptura());
+
+        lblPreviewCaptura = new javax.swing.JLabel("Sin captura adjunta");
+        lblPreviewCaptura.setPreferredSize(new java.awt.Dimension(150, 100));
+        lblPreviewCaptura.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblPreviewCaptura.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.GRAY));
+
+        // Agregar al panel principal
+        javax.swing.JPanel panelCaptura = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+        panelCaptura.setBackground(new java.awt.Color(204, 204, 204));
+        panelCaptura.add(lblCaptura);
+        panelCaptura.add(btnAdjuntarCaptura);
+        panelCaptura.add(lblPreviewCaptura);
+
+        getContentPane().add(panelCaptura, java.awt.BorderLayout.SOUTH);
+        pack();
+    }
+
+    private void seleccionarCaptura() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Seleccionar captura de pantalla");
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Imágenes (PNG, JPG, GIF)", "png", "jpg", "jpeg", "gif"));
+
+        if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            archivoCaptura = fileChooser.getSelectedFile();
+            // Mostrar miniatura
+            javax.swing.ImageIcon miniatura = ImagenCaptura.cargarMiniatura(archivoCaptura.getAbsolutePath(), 150, 100);
+            if (miniatura != null) {
+                lblPreviewCaptura.setIcon(miniatura);
+                lblPreviewCaptura.setText("");
+            } else {
+                lblPreviewCaptura.setIcon(null);
+                lblPreviewCaptura.setText(archivoCaptura.getName());
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -216,6 +264,18 @@ public class FrmRegistrarError extends javax.swing.JFrame {
         );
 
         error.setSolucion(solucion);
+
+        // Copiar captura si se adjuntó una
+        if (archivoCaptura != null) {
+            try {
+                String rutaCaptura = ImagenCaptura.copiarImagen(archivoCaptura);
+                error.setCapturaError(rutaCaptura);
+            } catch (java.io.IOException ioEx) {
+                JOptionPane.showMessageDialog(this,
+                    "Error al adjuntar captura: " + ioEx.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
 
         try {
             GestorErrores gestor = new GestorErrores();
