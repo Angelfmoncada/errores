@@ -19,8 +19,8 @@ public class ErrorDAO {
      * Inserta un nuevo error en la base de datos.
      */
     public void insertar(ErrorTicket e) {
-        String sql = "INSERT INTO errores (titulo, descripcion, severidad, fase, solucion, captura_error) " +
-                     "VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO errores (titulo, descripcion, severidad, fase, solucion, captura_error, pasos_reproducir) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection con = ConexionBD.conectar();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -30,6 +30,7 @@ public class ErrorDAO {
             ps.setString(4, e.getFase().name());
             ps.setString(5, e.getSolucion());
             ps.setString(6, e.getCapturaError());
+            ps.setString(7, e.getPasosReproducir());
             ps.executeUpdate();
 
         } catch (SQLException ex) {
@@ -43,7 +44,7 @@ public class ErrorDAO {
     public List<ErrorTicket> obtenerTodos() {
         List<ErrorTicket> lista = new ArrayList<>();
         String sql = "SELECT id, titulo, descripcion, severidad, fase, fecha, solucion, " +
-                     "resuelto_por, fecha_solucion, captura_error FROM errores";
+                     "resuelto_por, fecha_solucion, captura_error, pasos_reproducir, descripcion_solucion FROM errores";
 
         try (Connection con = ConexionBD.conectar();
              Statement st = con.createStatement();
@@ -62,6 +63,8 @@ public class ErrorDAO {
                 e.setResueltoPor(rs.getString("resuelto_por"));
                 e.setFechaSolucion(rs.getTimestamp("fecha_solucion"));
                 e.setCapturaError(rs.getString("captura_error"));
+                e.setPasosReproducir(rs.getString("pasos_reproducir"));
+                e.setDescripcionSolucion(rs.getString("descripcion_solucion"));
                 lista.add(e);
             }
 
@@ -76,7 +79,8 @@ public class ErrorDAO {
      * Actualiza un error existente (fase y solución).
      */
     public void actualizar(ErrorTicket e) {
-        String sql = "UPDATE errores SET fase = ?, solucion = ?, resuelto_por = ?, fecha_solucion = ? WHERE id = ?";
+        String sql = "UPDATE errores SET fase = ?, solucion = ?, resuelto_por = ?, " +
+                     "fecha_solucion = ?, descripcion_solucion = ? WHERE id = ?";
 
         try (Connection con = ConexionBD.conectar();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -85,7 +89,8 @@ public class ErrorDAO {
             ps.setString(2, e.getSolucion());
             ps.setString(3, e.getResueltoPor());
             ps.setTimestamp(4, e.getFechaSolucion());
-            ps.setInt(5, e.getId());
+            ps.setString(5, e.getDescripcionSolucion());
+            ps.setInt(6, e.getId());
             ps.executeUpdate();
 
         } catch (SQLException ex) {
@@ -100,7 +105,7 @@ public class ErrorDAO {
         List<ErrorTicket> lista = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
             "SELECT id, titulo, descripcion, severidad, fase, fecha, solucion, " +
-            "resuelto_por, fecha_solucion, captura_error FROM errores WHERE 1=1");
+            "resuelto_por, fecha_solucion, captura_error, pasos_reproducir, descripcion_solucion FROM errores WHERE 1=1");
 
         if (titulo != null && !titulo.isEmpty()) {
             sql.append(" AND titulo LIKE ?");
@@ -134,6 +139,8 @@ public class ErrorDAO {
                 e.setResueltoPor(rs.getString("resuelto_por"));
                 e.setFechaSolucion(rs.getTimestamp("fecha_solucion"));
                 e.setCapturaError(rs.getString("captura_error"));
+                e.setPasosReproducir(rs.getString("pasos_reproducir"));
+                e.setDescripcionSolucion(rs.getString("descripcion_solucion"));
                 lista.add(e);
             }
 

@@ -31,6 +31,9 @@ public class frmTableErrores extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> cboFiltroFase;
     private javax.swing.JButton btnBuscar;
     private javax.swing.JButton btnVerCaptura;
+    private javax.swing.JLabel lblDescSolucion;
+    private javax.swing.JTextArea txtDescSolucion;
+    private javax.swing.JScrollPane scrollDescSolucion;
 
     /**
      * Creates new form frmTableErrores
@@ -42,20 +45,41 @@ public class frmTableErrores extends javax.swing.JFrame {
         this.setLocationRelativeTo(null);
 
 
+        // Crear campo de Descripción de Solución
+        lblDescSolucion = new javax.swing.JLabel("Descripción de la Solución:");
+        lblDescSolucion.setFont(new java.awt.Font("Trebuchet MS", 1, 14));
+        txtDescSolucion = new javax.swing.JTextArea(3, 20);
+        txtDescSolucion.setLineWrap(true);
+        txtDescSolucion.setWrapStyleWord(true);
+        scrollDescSolucion = new javax.swing.JScrollPane(txtDescSolucion);
+
+        // Panel para descripción de solución (se agrega al sur del contenido)
+        javax.swing.JPanel panelDescSol = new javax.swing.JPanel(new java.awt.BorderLayout(5, 5));
+        panelDescSol.setBackground(new java.awt.Color(204, 204, 204));
+        panelDescSol.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 14, 5, 14));
+        panelDescSol.add(lblDescSolucion, java.awt.BorderLayout.NORTH);
+        panelDescSol.add(scrollDescSolucion, java.awt.BorderLayout.CENTER);
+        getContentPane().add(panelDescSol, java.awt.BorderLayout.SOUTH);
+
         //Evento de activar txtSolución solo si el ComboBox está en "Solucionado"
-          cboFase.addActionListener(e -> {
-        String faseSeleccionada = (String) cboFase.getSelectedItem();
-        boolean mostrarSolucion = faseSeleccionada.equals("Solucionado");
+        cboFase.addActionListener(e -> {
+            String faseSeleccionada = (String) cboFase.getSelectedItem();
+            boolean mostrarSolucion = faseSeleccionada.equals("Solucionado");
 
-        txtSolucion.setVisible(mostrarSolucion);
-        lblSolucion.setVisible(mostrarSolucion);
-        if (!mostrarSolucion) {
-            txtSolucion.setText("");
-        }
-    });
+            txtSolucion.setVisible(mostrarSolucion);
+            lblSolucion.setVisible(mostrarSolucion);
+            lblDescSolucion.setVisible(mostrarSolucion);
+            scrollDescSolucion.setVisible(mostrarSolucion);
+            if (!mostrarSolucion) {
+                txtSolucion.setText("");
+                txtDescSolucion.setText("");
+            }
+        });
 
-        txtSolucion.setVisible(false);  // Oculto por defecto
+        txtSolucion.setVisible(false);
         lblSolucion.setVisible(false);
+        lblDescSolucion.setVisible(false);
+        scrollDescSolucion.setVisible(false);
 
         txtBuscar = new javax.swing.JTextField(15);
         txtBuscar.setFont(new java.awt.Font("Trebuchet MS", 0, 14));
@@ -160,6 +184,20 @@ public class frmTableErrores extends javax.swing.JFrame {
 
         //Carga la solución en el campo (columna 6 despues de agregar fecha)
         txtSolucion.setText((String) jTable1.getValueAt(fila, 6));
+
+        // Cargar descripción de solución del error seleccionado
+        int id = (int) jTable1.getValueAt(fila, 0);
+        try {
+            List<ErrorTicket> errores = new GestorErrores().obtenerTodosErrores();
+            for (ErrorTicket err : errores) {
+                if (err.getId() == id) {
+                    txtDescSolucion.setText(err.getDescripcionSolucion() != null ? err.getDescripcionSolucion() : "");
+                    break;
+                }
+            }
+        } catch (Exception ex) {
+            txtDescSolucion.setText("");
+        }
     }
 }
 
@@ -198,8 +236,12 @@ public class frmTableErrores extends javax.swing.JFrame {
     sev,
     faseSeleccionada
 );
-        //Asigna solución y ID al error
+        //Asigna solución, descripción de solución e ID al error
         error.setSolucion(solucion);
+        String descSol = txtDescSolucion.getText().trim();
+        if (!descSol.isEmpty()) {
+            error.setDescripcionSolucion(descSol);
+        }
         error.setId(id);
         
         //Actualiza el error en la base de datos

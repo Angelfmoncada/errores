@@ -21,19 +21,43 @@ public class FrmRegistrarError extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmRegistrarError.class.getName());
 
-    private File archivoCaptura; // Archivo de captura seleccionado
+    private File archivoCaptura;
     private javax.swing.JButton btnAdjuntarCaptura;
     private javax.swing.JLabel lblCaptura;
     private javax.swing.JLabel lblPreviewCaptura;
+    private javax.swing.JTextArea txtPasosReproducir;
 
     public FrmRegistrarError() {
         initComponents();
         Utilidades.Icono.setLogotipo(this);
         this.setLocationRelativeTo(null);
-        agregarComponentesCaptura();
+        agregarComponentesExtra();
     }
 
-    private void agregarComponentesCaptura() {
+    private void agregarComponentesExtra() {
+        // Panel inferior con dos secciones: pasos para reproducir y captura
+        javax.swing.JPanel panelExtra = new javax.swing.JPanel();
+        panelExtra.setLayout(new javax.swing.BoxLayout(panelExtra, javax.swing.BoxLayout.Y_AXIS));
+        panelExtra.setBackground(new java.awt.Color(204, 204, 204));
+
+        // --- Sección: Pasos para reproducir ---
+        javax.swing.JPanel panelPasos = new javax.swing.JPanel(new java.awt.BorderLayout(5, 5));
+        panelPasos.setBackground(new java.awt.Color(204, 204, 204));
+        panelPasos.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 10, 5, 10));
+
+        javax.swing.JLabel lblPasos = new javax.swing.JLabel("Pasos para Reproducir:");
+        lblPasos.setFont(new java.awt.Font("Trebuchet MS", 1, 14));
+        panelPasos.add(lblPasos, java.awt.BorderLayout.NORTH);
+
+        txtPasosReproducir = new javax.swing.JTextArea(4, 30);
+        txtPasosReproducir.setLineWrap(true);
+        txtPasosReproducir.setWrapStyleWord(true);
+        javax.swing.JScrollPane scrollPasos = new javax.swing.JScrollPane(txtPasosReproducir);
+        panelPasos.add(scrollPasos, java.awt.BorderLayout.CENTER);
+
+        panelExtra.add(panelPasos);
+
+        // --- Sección: Captura de pantalla ---
         lblCaptura = new javax.swing.JLabel("Captura:");
         lblCaptura.setFont(new java.awt.Font("Trebuchet MS", 1, 14));
 
@@ -48,14 +72,15 @@ public class FrmRegistrarError extends javax.swing.JFrame {
         lblPreviewCaptura.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblPreviewCaptura.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.GRAY));
 
-        // Agregar al panel principal
         javax.swing.JPanel panelCaptura = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
         panelCaptura.setBackground(new java.awt.Color(204, 204, 204));
         panelCaptura.add(lblCaptura);
         panelCaptura.add(btnAdjuntarCaptura);
         panelCaptura.add(lblPreviewCaptura);
 
-        getContentPane().add(panelCaptura, java.awt.BorderLayout.SOUTH);
+        panelExtra.add(panelCaptura);
+
+        getContentPane().add(panelExtra, java.awt.BorderLayout.SOUTH);
         pack();
     }
 
@@ -264,6 +289,12 @@ public class FrmRegistrarError extends javax.swing.JFrame {
         );
 
         error.setSolucion(solucion);
+
+        // Agregar pasos para reproducir si se proporcionaron
+        String pasos = txtPasosReproducir.getText().trim();
+        if (!pasos.isEmpty()) {
+            error.setPasosReproducir(pasos);
+        }
 
         // Copiar captura si se adjuntó una
         if (archivoCaptura != null) {

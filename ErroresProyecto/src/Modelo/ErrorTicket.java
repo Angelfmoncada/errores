@@ -99,4 +99,25 @@ public class ErrorTicket {
     public void setCapturaError(String capturaError) {
         this.capturaError = capturaError;
     }
+
+    // --- Documentación estructurada ---
+
+    private String pasosReproducir;
+    private String descripcionSolucion;
+
+    public String getPasosReproducir() {
+        return pasosReproducir;
+    }
+
+    public void setPasosReproducir(String pasosReproducir) {
+        this.pasosReproducir = pasosReproducir;
+    }
+
+    public String getDescripcionSolucion() {
+        return descripcionSolucion;
+    }
+
+    public void setDescripcionSolucion(String descripcionSolucion) {
+        this.descripcionSolucion = descripcionSolucion;
+    }
 }
