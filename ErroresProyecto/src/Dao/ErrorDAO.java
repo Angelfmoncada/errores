@@ -152,6 +152,102 @@ public class ErrorDAO {
     }
 
     /**
+     * Busca solo errores resueltos (SOLUCIONADO o CERRADO) con filtros opcionales.
+     */
+    public List<ErrorTicket> buscarResueltos(String titulo, String severidad,
+                                              String resueltoPor, Timestamp desde, Timestamp hasta) {
+        List<ErrorTicket> lista = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+            "SELECT id, titulo, descripcion, severidad, fase, fecha, solucion, " +
+            "resuelto_por, fecha_solucion, captura_error, pasos_reproducir, descripcion_solucion " +
+            "FROM errores WHERE fase IN ('SOLUCIONADO', 'CERRADO')");
+
+        if (titulo != null && !titulo.isEmpty()) {
+            sql.append(" AND titulo LIKE ?");
+        }
+        if (severidad != null && !severidad.isEmpty()) {
+            sql.append(" AND severidad = ?");
+        }
+        if (resueltoPor != null && !resueltoPor.isEmpty()) {
+            sql.append(" AND resuelto_por = ?");
+        }
+        if (desde != null) {
+            sql.append(" AND fecha_solucion >= ?");
+        }
+        if (hasta != null) {
+            sql.append(" AND fecha_solucion <= ?");
+        }
+        sql.append(" ORDER BY fecha_solucion DESC");
+
+        try (Connection con = ConexionBD.conectar();
+             PreparedStatement ps = con.prepareStatement(sql.toString())) {
+
+            int idx = 1;
+            if (titulo != null && !titulo.isEmpty()) {
+                ps.setString(idx++, "%" + titulo + "%");
+            }
+            if (severidad != null && !severidad.isEmpty()) {
+                ps.setString(idx++, severidad);
+            }
+            if (resueltoPor != null && !resueltoPor.isEmpty()) {
+                ps.setString(idx++, resueltoPor);
+            }
+            if (desde != null) {
+                ps.setTimestamp(idx++, desde);
+            }
+            if (hasta != null) {
+                ps.setTimestamp(idx++, hasta);
+            }
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                ErrorTicket e = new ErrorTicket(
+                    rs.getString("titulo"),
+                    rs.getString("descripcion"),
+                    Severidad.valueOf(rs.getString("severidad")),
+                    Fase.valueOf(rs.getString("fase"))
+                );
+                e.setId(rs.getInt("id"));
+                e.setFecha(rs.getTimestamp("fecha"));
+                e.setSolucion(rs.getString("solucion"));
+                e.setResueltoPor(rs.getString("resuelto_por"));
+                e.setFechaSolucion(rs.getTimestamp("fecha_solucion"));
+                e.setCapturaError(rs.getString("captura_error"));
+                e.setPasosReproducir(rs.getString("pasos_reproducir"));
+                e.setDescripcionSolucion(rs.getString("descripcion_solucion"));
+                lista.add(e);
+            }
+
+        } catch (SQLException ex) {
+            throw new ErrorDaoException("Error al buscar resueltos: " + ex.getMessage(), ex);
+        }
+
+        return lista;
+    }
+
+    /**
+     * Obtiene la lista de usuarios que han resuelto errores.
+     */
+    public List<String> obtenerResolutores() {
+        List<String> lista = new ArrayList<>();
+        String sql = "SELECT DISTINCT resuelto_por FROM errores WHERE resuelto_por IS NOT NULL ORDER BY resuelto_por";
+
+        try (Connection con = ConexionBD.conectar();
+             Statement st = con.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+
+            while (rs.next()) {
+                lista.add(rs.getString("resuelto_por"));
+            }
+
+        } catch (SQLException ex) {
+            throw new ErrorDaoException("Error al obtener resolutores: " + ex.getMessage(), ex);
+        }
+
+        return lista;
+    }
+
+    /**
      * Elimina un error de la base de datos por su ID.
      */
     public void eliminar(int id) {

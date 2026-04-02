@@ -23,6 +23,45 @@ public class FrmPrincipal extends javax.swing.JFrame {
         if (usuario != null) {
             this.setTitle("Gestor de Errores - " + usuario);
         }
+        agregarBotonesExtra();
+    }
+
+    private void agregarBotonesExtra() {
+        javax.swing.JButton btnDashboard = new javax.swing.JButton("Dashboard");
+        btnDashboard.setFont(new java.awt.Font("Trebuchet MS", java.awt.Font.BOLD, 12));
+        btnDashboard.setBackground(new java.awt.Color(41, 128, 185));
+        btnDashboard.setForeground(java.awt.Color.WHITE);
+        btnDashboard.addActionListener(e -> {
+            new FrmDashboard().setVisible(true);
+            this.dispose();
+        });
+
+        javax.swing.JButton btnResueltos = new javax.swing.JButton("Errores Resueltos");
+        btnResueltos.setFont(new java.awt.Font("Trebuchet MS", java.awt.Font.BOLD, 12));
+        btnResueltos.setBackground(new java.awt.Color(46, 204, 113));
+        btnResueltos.setForeground(java.awt.Color.WHITE);
+        btnResueltos.addActionListener(e -> {
+            new FrmErroresResueltos().setVisible(true);
+            this.dispose();
+        });
+
+        // Agregar al panel lateral
+        javax.swing.JPanel panelNuevosBotones = new javax.swing.JPanel();
+        panelNuevosBotones.setLayout(new javax.swing.BoxLayout(panelNuevosBotones, javax.swing.BoxLayout.Y_AXIS));
+        panelNuevosBotones.setBackground(new java.awt.Color(0, 0, 102));
+        panelNuevosBotones.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        btnDashboard.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
+        btnResueltos.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
+        btnDashboard.setMaximumSize(new java.awt.Dimension(160, 31));
+        btnResueltos.setMaximumSize(new java.awt.Dimension(160, 31));
+
+        panelNuevosBotones.add(btnDashboard);
+        panelNuevosBotones.add(javax.swing.Box.createVerticalStrut(10));
+        panelNuevosBotones.add(btnResueltos);
+
+        getContentPane().add(panelNuevosBotones, java.awt.BorderLayout.EAST);
+        pack();
     }
 
 
