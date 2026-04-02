@@ -41,7 +41,8 @@ public class ErrorDAO {
      */
     public List<ErrorTicket> obtenerTodos() {
         List<ErrorTicket> lista = new ArrayList<>();
-        String sql = "SELECT id, titulo, descripcion, severidad, fase, fecha, solucion FROM errores";
+        String sql = "SELECT id, titulo, descripcion, severidad, fase, fecha, solucion, " +
+                     "resuelto_por, fecha_solucion FROM errores";
 
         try (Connection con = ConexionBD.conectar();
              Statement st = con.createStatement();
@@ -57,6 +58,8 @@ public class ErrorDAO {
                 e.setId(rs.getInt("id"));
                 e.setFecha(rs.getTimestamp("fecha"));
                 e.setSolucion(rs.getString("solucion"));
+                e.setResueltoPor(rs.getString("resuelto_por"));
+                e.setFechaSolucion(rs.getTimestamp("fecha_solucion"));
                 lista.add(e);
             }
 
@@ -71,14 +74,16 @@ public class ErrorDAO {
      * Actualiza un error existente (fase y solución).
      */
     public void actualizar(ErrorTicket e) {
-        String sql = "UPDATE errores SET fase = ?, solucion = ? WHERE id = ?";
+        String sql = "UPDATE errores SET fase = ?, solucion = ?, resuelto_por = ?, fecha_solucion = ? WHERE id = ?";
 
         try (Connection con = ConexionBD.conectar();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, e.getFase().name());
             ps.setString(2, e.getSolucion());
-            ps.setInt(3, e.getId());
+            ps.setString(3, e.getResueltoPor());
+            ps.setTimestamp(4, e.getFechaSolucion());
+            ps.setInt(5, e.getId());
             ps.executeUpdate();
 
         } catch (SQLException ex) {
@@ -92,7 +97,8 @@ public class ErrorDAO {
     public List<ErrorTicket> buscar(String titulo, String fase) {
         List<ErrorTicket> lista = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-            "SELECT id, titulo, descripcion, severidad, fase, fecha, solucion FROM errores WHERE 1=1");
+            "SELECT id, titulo, descripcion, severidad, fase, fecha, solucion, " +
+            "resuelto_por, fecha_solucion FROM errores WHERE 1=1");
 
         if (titulo != null && !titulo.isEmpty()) {
             sql.append(" AND titulo LIKE ?");
@@ -123,6 +129,8 @@ public class ErrorDAO {
                 e.setId(rs.getInt("id"));
                 e.setFecha(rs.getTimestamp("fecha"));
                 e.setSolucion(rs.getString("solucion"));
+                e.setResueltoPor(rs.getString("resuelto_por"));
+                e.setFechaSolucion(rs.getTimestamp("fecha_solucion"));
                 lista.add(e);
             }
 

@@ -80,7 +80,8 @@ public class frmTableErrores extends javax.swing.JFrame {
     //Crea el modelo tabla, lo asigna a JTable1 y define que solo se pueda seleccionar una fila sola a la vez
      private void configurarTabla() {
         modeloTabla = new DefaultTableModel(
-                new Object[]{"ID", "Título", "Descripción", "Severidad", "Fase", "Fecha", "Solución"}, 0
+                new Object[]{"ID", "Título", "Descripción", "Severidad", "Fase", "Fecha",
+                             "Solución", "Resuelto Por", "Fecha Solución"}, 0
         );
         
         
@@ -106,7 +107,9 @@ public class frmTableErrores extends javax.swing.JFrame {
                         e.getSeveridad(),
                         e.getFase(),
                         e.getFecha(),
-                        e.getSolucion()
+                        e.getSolucion(),
+                        e.getResueltoPor(),
+                        e.getFechaSolucion()
                 });
             }
         } catch (Exception ex) {
@@ -216,7 +219,9 @@ public class frmTableErrores extends javax.swing.JFrame {
                         e.getSeveridad(),
                         e.getFase(),
                         e.getFecha(),
-                        e.getSolucion()
+                        e.getSolucion(),
+                        e.getResueltoPor(),
+                        e.getFechaSolucion()
                 });
             }
         } catch (Exception ex) {

@@ -66,4 +66,25 @@ public class ErrorTicket {
     public void setSolucion(String solucion) {
         this.solucion = solucion;
     }
+
+    // --- Tracking de resolución ---
+
+    private String resueltoPor;
+    private Timestamp fechaSolucion;
+
+    public String getResueltoPor() {
+        return resueltoPor;
+    }
+
+    public void setResueltoPor(String resueltoPor) {
+        this.resueltoPor = resueltoPor;
+    }
+
+    public Timestamp getFechaSolucion() {
+        return fechaSolucion;
+    }
+
+    public void setFechaSolucion(Timestamp fechaSolucion) {
+        this.fechaSolucion = fechaSolucion;
+    }
 }

@@ -1,8 +1,11 @@
 package Servicio;
 
 import Modelo.ErrorTicket;
+import Modelo.Fase;
+import Modelo.SesionUsuario;
 import Dao.ErrorDAO;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 /**
@@ -13,7 +16,6 @@ public class GestorErrores {
 
     private final ErrorDAO errorDAO;
 
-    // Constructor
     public GestorErrores() {
         this.errorDAO = new ErrorDAO();
     }
@@ -27,8 +29,6 @@ public class GestorErrores {
 
     /**
      * Devuelve una lista con todos los errores registrados.
-     * Se usa para llenar la tabla en la GUI.
-     * @return Lista de errores
      */
     public List<ErrorTicket> obtenerTodosErrores() {
         return errorDAO.obtenerTodos();
@@ -36,10 +36,17 @@ public class GestorErrores {
 
     /**
      * Actualiza un error existente en la base de datos.
-     * Se usa para modificar la fase y agregar solución.
-     * @param e Objeto ErrorTicket con los datos actualizados
+     * Si la fase es SOLUCIONADO, registra automáticamente quién lo resolvió y cuándo.
      */
     public void actualizarError(ErrorTicket e) {
+        // Auto-poblar datos de resolución
+        if (e.getFase() == Fase.SOLUCIONADO && e.getResueltoPor() == null) {
+            e.setResueltoPor(SesionUsuario.getInstancia().getUsername());
+            e.setFechaSolucion(new Timestamp(System.currentTimeMillis()));
+        } else if (e.getFase() != Fase.SOLUCIONADO && e.getFase() != Fase.CERRADO) {
+            e.setResueltoPor(null);
+            e.setFechaSolucion(null);
+        }
         errorDAO.actualizar(e);
     }
 
@@ -57,4 +64,3 @@ public class GestorErrores {
         errorDAO.eliminar(id);
     }
 }
-
