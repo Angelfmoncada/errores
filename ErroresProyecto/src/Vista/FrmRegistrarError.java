@@ -217,16 +217,19 @@ public class FrmRegistrarError extends javax.swing.JFrame {
 
         error.setSolucion(solucion);
 
-        GestorErrores gestor = new GestorErrores();
-        gestor.registrarError(error);
-
-        javax.swing.JOptionPane.showMessageDialog(this, "Error registrado correctamente");
-
-        txtTitulo.setText("");
-        txtDescripcion.setText("");
-        cboSeveridad.setSelectedIndex(0);
-        this.dispose();
-        new FrmPrincipal().setVisible(true);
+        try {
+            GestorErrores gestor = new GestorErrores();
+            gestor.registrarError(error);
+            javax.swing.JOptionPane.showMessageDialog(this, "Error registrado correctamente");
+            txtTitulo.setText("");
+            txtDescripcion.setText("");
+            cboSeveridad.setSelectedIndex(0);
+            this.dispose();
+            new FrmPrincipal().setVisible(true);
+        } catch (Exception ex) {
+            javax.swing.JOptionPane.showMessageDialog(this,
+                "Error al guardar: " + ex.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
 
     }
 

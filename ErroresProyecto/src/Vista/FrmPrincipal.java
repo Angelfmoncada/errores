@@ -4,19 +4,25 @@
  */
 package Vista;
 
+import Modelo.SesionUsuario;
+
 /**
  *
  * @author Mass
  */
 public class FrmPrincipal extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmPrincipal.class.getName());
 
     public FrmPrincipal() {
         initComponents();
-         this.setLocationRelativeTo(null);
-         Utilidades.Icono.setLogotipo(this);
-        
+        this.setLocationRelativeTo(null);
+        Utilidades.Icono.setLogotipo(this);
+        // Mostrar el usuario autenticado en el título
+        String usuario = SesionUsuario.getInstancia().getUsername();
+        if (usuario != null) {
+            this.setTitle("Gestor de Errores - " + usuario);
+        }
     }
 
 

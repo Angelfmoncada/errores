@@ -95,22 +95,23 @@ public class frmTableErrores extends javax.swing.JFrame {
     }
     //Carga los datos de la tabla 
     private void cargarTabla() {
-        modeloTabla.setRowCount(0); // limpiar tabla
-       //Trae la lista desde la clase GestorErrores
-        List<ErrorTicket> errores = new GestorErrores().obtenerTodosErrores();
-        
-        System.out.println("Errores encontrados: " + errores.size());
-        //Recorre toda la tabla y trae los datos agregándolos a la tabla
-        for (ErrorTicket e : errores) {
-            modeloTabla.addRow(new Object[]{
-                    e.getId(),
-                    e.getTitulo(),
-                    e.getDescripcion(),
-                    e.getSeveridad(),
-                    e.getFase(),
-                    e.getFecha(),
-                    e.getSolucion()
-            });
+        modeloTabla.setRowCount(0);
+        try {
+            List<ErrorTicket> errores = new GestorErrores().obtenerTodosErrores();
+            for (ErrorTicket e : errores) {
+                modeloTabla.addRow(new Object[]{
+                        e.getId(),
+                        e.getTitulo(),
+                        e.getDescripcion(),
+                        e.getSeveridad(),
+                        e.getFase(),
+                        e.getFecha(),
+                        e.getSolucion()
+                });
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                "Error al cargar datos: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -186,10 +187,14 @@ public class frmTableErrores extends javax.swing.JFrame {
         error.setId(id);
         
         //Actualiza el error en la base de datos
-        new GestorErrores().actualizarError(error);
-        JOptionPane.showMessageDialog(this, "Error actualizado correctamente");
-        //Actualiza los datos de la tabla
-        cargarTabla();
+        try {
+            new GestorErrores().actualizarError(error);
+            JOptionPane.showMessageDialog(this, "Error actualizado correctamente");
+            cargarTabla();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                "Error al actualizar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     //Busca errores por titulo y fase
@@ -201,17 +206,22 @@ public class frmTableErrores extends javax.swing.JFrame {
         }
 
         modeloTabla.setRowCount(0);
-        List<ErrorTicket> errores = new GestorErrores().buscarErrores(titulo, fase);
-        for (ErrorTicket e : errores) {
-            modeloTabla.addRow(new Object[]{
-                    e.getId(),
-                    e.getTitulo(),
-                    e.getDescripcion(),
-                    e.getSeveridad(),
-                    e.getFase(),
-                    e.getFecha(),
-                    e.getSolucion()
-            });
+        try {
+            List<ErrorTicket> errores = new GestorErrores().buscarErrores(titulo, fase);
+            for (ErrorTicket e : errores) {
+                modeloTabla.addRow(new Object[]{
+                        e.getId(),
+                        e.getTitulo(),
+                        e.getDescripcion(),
+                        e.getSeveridad(),
+                        e.getFase(),
+                        e.getFecha(),
+                        e.getSolucion()
+                });
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                "Error al buscar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -228,10 +238,15 @@ public class frmTableErrores extends javax.swing.JFrame {
                 JOptionPane.YES_NO_OPTION);
 
         if (confirmacion == JOptionPane.YES_OPTION) {
-            int id = (int) jTable1.getValueAt(fila, 0);
-            new GestorErrores().eliminarError(id);
-            JOptionPane.showMessageDialog(this, "Error eliminado correctamente");
-            cargarTabla();
+            try {
+                int id = (int) jTable1.getValueAt(fila, 0);
+                new GestorErrores().eliminarError(id);
+                JOptionPane.showMessageDialog(this, "Error eliminado correctamente");
+                cargarTabla();
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                    "Error al eliminar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 

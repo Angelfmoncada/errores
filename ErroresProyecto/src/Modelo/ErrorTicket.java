@@ -2,8 +2,10 @@ package Modelo;
 
 import java.sql.Timestamp;
 
-    //Clase que representa un "Ticket" de error en el sistema
-    //Encapsulación las variables
+/**
+ * Clase que representa un "Ticket" de error en el sistema.
+ * Encapsulación de las variables.
+ */
 public class ErrorTicket {
 
     private int id;
@@ -12,19 +14,17 @@ public class ErrorTicket {
     private Severidad severidad;
     private Fase fase;
     private String solucion;
+    private Timestamp fecha;
 
-    //Constructor de ErrorTicket
-   public ErrorTicket(String titulo, String descripcion, Severidad severidad, Fase fase) {
-    this.titulo = titulo;
-    this.descripcion = descripcion;
-    this.severidad = severidad;
-    this.fase = fase;
-}
+    public ErrorTicket(String titulo, String descripcion, Severidad severidad, Fase fase) {
+        this.titulo = titulo;
+        this.descripcion = descripcion;
+        this.severidad = severidad;
+        this.fase = fase;
+    }
 
-
-    
     public int getId() {
-        return id;  
+        return id;
     }
 
     public void setId(int id) {
@@ -51,16 +51,14 @@ public class ErrorTicket {
         this.fase = fase;
     }
 
-    private Timestamp fecha;
-    
-    public Timestamp getFecha(){
+    public Timestamp getFecha() {
         return fecha;
     }
-    
-    public void setFecha(Timestamp fecha){
-        this.fecha =fecha;
+
+    public void setFecha(Timestamp fecha) {
+        this.fecha = fecha;
     }
-    
+
     public String getSolucion() {
         return solucion;
     }
@@ -68,6 +66,4 @@ public class ErrorTicket {
     public void setSolucion(String solucion) {
         this.solucion = solucion;
     }
-    
-    
 }

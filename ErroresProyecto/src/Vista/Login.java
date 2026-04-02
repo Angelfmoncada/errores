@@ -5,6 +5,7 @@
 package Vista;
 
 import Dao.Usuario;
+import Modelo.SesionUsuario;
 import Utilidades.Imagen;
 import java.awt.Image;
 import javax.swing.ImageIcon;
@@ -206,18 +207,26 @@ public class Login extends javax.swing.JFrame {
     //Instancia de UsuarioDao para verificación de Usuario
     Usuario usuarioDAO = new Usuario();
 
-String user = txtUsuario.getText().trim();
-String pass = new String(txtPassword.getPassword()).trim();
-    
-    //Validación de credenciales
-    if (usuarioDAO.validarLogin(user, pass)) {
-    JOptionPane.showMessageDialog(this, "Bienvenido " + user);
-    new FrmPrincipal().setVisible(true);
-    this.dispose();
-} else {
-    JOptionPane.showMessageDialog(this,
-        "Usuario o contraseña incorrectos");
-}
+    String user = txtUsuario.getText().trim();
+    String pass = new String(txtPassword.getPassword()).trim();
+
+    try {
+        //Validación de credenciales - retorna rol o null
+        String rol = usuarioDAO.validarLogin(user, pass);
+        if (rol != null) {
+            // Iniciar sesión del usuario
+            SesionUsuario.getInstancia().iniciarSesion(user, rol);
+            JOptionPane.showMessageDialog(this, "Bienvenido " + user);
+            new FrmPrincipal().setVisible(true);
+            this.dispose();
+        } else {
+            JOptionPane.showMessageDialog(this,
+                "Usuario o contraseña incorrectos");
+        }
+    } catch (Exception ex) {
+        JOptionPane.showMessageDialog(this,
+            "Error de conexión: " + ex.getMessage());
+    }
 
 
         // TODO add your handling code here:

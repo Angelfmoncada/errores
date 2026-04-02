@@ -1,10 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Dao;
 
 import Conexion.ConexionBD;
+import Modelo.ErrorDaoException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -14,26 +11,31 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- *
- * Clase que se encarga de la validación de credenciales de usuario
- *
+ * Clase que se encarga de la validación de credenciales de usuario.
+ * Retorna el rol del usuario al autenticarse exitosamente.
  */
 public class Usuario {
 
-    public boolean validarLogin(String username, String password) {
+    /**
+     * Valida las credenciales del usuario.
+     * @return el rol del usuario (ej: "admin", "visual") o null si las credenciales son inválidas.
+     */
+    public String validarLogin(String username, String password) {
         String hashedPassword = hashSHA256(password);
-        String sql = "SELECT * FROM usuarios WHERE username = ? AND password = ?";
+        String sql = "SELECT rol FROM usuarios WHERE username = ? AND password = ?";
         try (Connection con = ConexionBD.conectar();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, username);
             ps.setString(2, hashedPassword);
             ResultSet rs = ps.executeQuery();
-            return rs.next();
+            if (rs.next()) {
+                return rs.getString("rol");
+            }
+            return null;
 
         } catch (SQLException e) {
-            System.out.println("Error en login: " + e.getMessage());
-            return false;
+            throw new ErrorDaoException("Error en login: " + e.getMessage(), e);
         }
     }
 
@@ -52,5 +54,4 @@ public class Usuario {
             throw new RuntimeException("SHA-256 no disponible", e);
         }
     }
-
 }
