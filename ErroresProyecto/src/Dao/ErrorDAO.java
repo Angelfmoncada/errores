@@ -11,9 +11,66 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Clase que maneja la conexión a la base de datos para los errores.
+ * DAO (Data Access Object) para operaciones CRUD de errores.
+ * Centraliza todo el acceso a la tabla 'errores' de la base de datos.
  */
 public class ErrorDAO {
+
+    private static final String COLUMNAS_SELECT =
+        "id, titulo, descripcion, severidad, fase, fecha, solucion, " +
+        "resuelto_por, fecha_solucion, captura_error, pasos_reproducir, descripcion_solucion";
+
+    /**
+     * Mapea una fila del ResultSet a un objeto ErrorTicket.
+     * Metodo centralizado para evitar duplicacion de codigo.
+     */
+    private ErrorTicket mapearFila(ResultSet rs) throws SQLException {
+        ErrorTicket e = new ErrorTicket(
+            rs.getString("titulo"),
+            rs.getString("descripcion"),
+            Severidad.valueOf(rs.getString("severidad")),
+            Fase.valueOf(rs.getString("fase"))
+        );
+        e.setId(rs.getInt("id"));
+        e.setFecha(rs.getTimestamp("fecha"));
+        e.setSolucion(rs.getString("solucion"));
+        e.setResueltoPor(rs.getString("resuelto_por"));
+        e.setFechaSolucion(rs.getTimestamp("fecha_solucion"));
+        e.setCapturaError(rs.getString("captura_error"));
+        e.setPasosReproducir(rs.getString("pasos_reproducir"));
+        e.setDescripcionSolucion(rs.getString("descripcion_solucion"));
+        return e;
+    }
+
+    /**
+     * Ejecuta un SELECT y mapea los resultados a una lista de ErrorTicket.
+     */
+    private List<ErrorTicket> ejecutarConsulta(String sql, ParametrosSetter setter) {
+        List<ErrorTicket> lista = new ArrayList<>();
+        try (Connection con = ConexionBD.conectar();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            if (setter != null) {
+                setter.setParametros(ps);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(mapearFila(rs));
+                }
+            }
+        } catch (SQLException ex) {
+            throw new ErrorDaoException("Error en consulta: " + ex.getMessage(), ex);
+        }
+        return lista;
+    }
+
+    /**
+     * Interfaz funcional para asignar parametros a un PreparedStatement.
+     */
+    @FunctionalInterface
+    private interface ParametrosSetter {
+        void setParametros(PreparedStatement ps) throws SQLException;
+    }
 
     /**
      * Inserta un nuevo error en la base de datos.
@@ -39,44 +96,25 @@ public class ErrorDAO {
     }
 
     /**
-     * Devuelve todos los errores registrados en la base de datos.
+     * Busca un error por su ID.
+     * @return el ErrorTicket encontrado o null si no existe
      */
-    public List<ErrorTicket> obtenerTodos() {
-        List<ErrorTicket> lista = new ArrayList<>();
-        String sql = "SELECT id, titulo, descripcion, severidad, fase, fecha, solucion, " +
-                     "resuelto_por, fecha_solucion, captura_error, pasos_reproducir, descripcion_solucion FROM errores";
-
-        try (Connection con = ConexionBD.conectar();
-             Statement st = con.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
-
-            while (rs.next()) {
-                ErrorTicket e = new ErrorTicket(
-                    rs.getString("titulo"),
-                    rs.getString("descripcion"),
-                    Severidad.valueOf(rs.getString("severidad")),
-                    Fase.valueOf(rs.getString("fase"))
-                );
-                e.setId(rs.getInt("id"));
-                e.setFecha(rs.getTimestamp("fecha"));
-                e.setSolucion(rs.getString("solucion"));
-                e.setResueltoPor(rs.getString("resuelto_por"));
-                e.setFechaSolucion(rs.getTimestamp("fecha_solucion"));
-                e.setCapturaError(rs.getString("captura_error"));
-                e.setPasosReproducir(rs.getString("pasos_reproducir"));
-                e.setDescripcionSolucion(rs.getString("descripcion_solucion"));
-                lista.add(e);
-            }
-
-        } catch (SQLException ex) {
-            throw new ErrorDaoException("Error al obtener errores: " + ex.getMessage(), ex);
-        }
-
-        return lista;
+    public ErrorTicket buscarPorId(int id) {
+        String sql = "SELECT " + COLUMNAS_SELECT + " FROM errores WHERE id = ?";
+        List<ErrorTicket> resultado = ejecutarConsulta(sql, ps -> ps.setInt(1, id));
+        return resultado.isEmpty() ? null : resultado.get(0);
     }
 
     /**
-     * Actualiza un error existente (fase y solución).
+     * Devuelve todos los errores registrados en la base de datos.
+     */
+    public List<ErrorTicket> obtenerTodos() {
+        String sql = "SELECT " + COLUMNAS_SELECT + " FROM errores ORDER BY fecha DESC";
+        return ejecutarConsulta(sql, null);
+    }
+
+    /**
+     * Actualiza un error existente (fase y solucion).
      */
     public void actualizar(ErrorTicket e) {
         String sql = "UPDATE errores SET fase = ?, solucion = ?, resuelto_por = ?, " +
@@ -102,53 +140,24 @@ public class ErrorDAO {
      * Busca errores por titulo y/o fase.
      */
     public List<ErrorTicket> buscar(String titulo, String fase) {
-        List<ErrorTicket> lista = new ArrayList<>();
-        StringBuilder sql = new StringBuilder(
-            "SELECT id, titulo, descripcion, severidad, fase, fecha, solucion, " +
-            "resuelto_por, fecha_solucion, captura_error, pasos_reproducir, descripcion_solucion FROM errores WHERE 1=1");
+        StringBuilder sql = new StringBuilder("SELECT " + COLUMNAS_SELECT + " FROM errores WHERE 1=1");
+        List<Object> params = new ArrayList<>();
 
         if (titulo != null && !titulo.isEmpty()) {
             sql.append(" AND titulo LIKE ?");
+            params.add("%" + titulo + "%");
         }
         if (fase != null && !fase.isEmpty()) {
             sql.append(" AND fase = ?");
+            params.add(fase);
         }
+        sql.append(" ORDER BY fecha DESC");
 
-        try (Connection con = ConexionBD.conectar();
-             PreparedStatement ps = con.prepareStatement(sql.toString())) {
-
-            int paramIndex = 1;
-            if (titulo != null && !titulo.isEmpty()) {
-                ps.setString(paramIndex++, "%" + titulo + "%");
+        return ejecutarConsulta(sql.toString(), ps -> {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
             }
-            if (fase != null && !fase.isEmpty()) {
-                ps.setString(paramIndex, fase);
-            }
-
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                ErrorTicket e = new ErrorTicket(
-                    rs.getString("titulo"),
-                    rs.getString("descripcion"),
-                    Severidad.valueOf(rs.getString("severidad")),
-                    Fase.valueOf(rs.getString("fase"))
-                );
-                e.setId(rs.getInt("id"));
-                e.setFecha(rs.getTimestamp("fecha"));
-                e.setSolucion(rs.getString("solucion"));
-                e.setResueltoPor(rs.getString("resuelto_por"));
-                e.setFechaSolucion(rs.getTimestamp("fecha_solucion"));
-                e.setCapturaError(rs.getString("captura_error"));
-                e.setPasosReproducir(rs.getString("pasos_reproducir"));
-                e.setDescripcionSolucion(rs.getString("descripcion_solucion"));
-                lista.add(e);
-            }
-
-        } catch (SQLException ex) {
-            throw new ErrorDaoException("Error al buscar: " + ex.getMessage(), ex);
-        }
-
-        return lista;
+        });
     }
 
     /**
@@ -156,73 +165,37 @@ public class ErrorDAO {
      */
     public List<ErrorTicket> buscarResueltos(String titulo, String severidad,
                                               String resueltoPor, Timestamp desde, Timestamp hasta) {
-        List<ErrorTicket> lista = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-            "SELECT id, titulo, descripcion, severidad, fase, fecha, solucion, " +
-            "resuelto_por, fecha_solucion, captura_error, pasos_reproducir, descripcion_solucion " +
-            "FROM errores WHERE fase IN ('SOLUCIONADO', 'CERRADO')");
+            "SELECT " + COLUMNAS_SELECT + " FROM errores WHERE fase IN ('SOLUCIONADO', 'CERRADO')");
+        List<Object> params = new ArrayList<>();
 
         if (titulo != null && !titulo.isEmpty()) {
             sql.append(" AND titulo LIKE ?");
+            params.add("%" + titulo + "%");
         }
         if (severidad != null && !severidad.isEmpty()) {
             sql.append(" AND severidad = ?");
+            params.add(severidad);
         }
         if (resueltoPor != null && !resueltoPor.isEmpty()) {
             sql.append(" AND resuelto_por = ?");
+            params.add(resueltoPor);
         }
         if (desde != null) {
             sql.append(" AND fecha_solucion >= ?");
+            params.add(desde);
         }
         if (hasta != null) {
             sql.append(" AND fecha_solucion <= ?");
+            params.add(hasta);
         }
         sql.append(" ORDER BY fecha_solucion DESC");
 
-        try (Connection con = ConexionBD.conectar();
-             PreparedStatement ps = con.prepareStatement(sql.toString())) {
-
-            int idx = 1;
-            if (titulo != null && !titulo.isEmpty()) {
-                ps.setString(idx++, "%" + titulo + "%");
+        return ejecutarConsulta(sql.toString(), ps -> {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
             }
-            if (severidad != null && !severidad.isEmpty()) {
-                ps.setString(idx++, severidad);
-            }
-            if (resueltoPor != null && !resueltoPor.isEmpty()) {
-                ps.setString(idx++, resueltoPor);
-            }
-            if (desde != null) {
-                ps.setTimestamp(idx++, desde);
-            }
-            if (hasta != null) {
-                ps.setTimestamp(idx++, hasta);
-            }
-
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                ErrorTicket e = new ErrorTicket(
-                    rs.getString("titulo"),
-                    rs.getString("descripcion"),
-                    Severidad.valueOf(rs.getString("severidad")),
-                    Fase.valueOf(rs.getString("fase"))
-                );
-                e.setId(rs.getInt("id"));
-                e.setFecha(rs.getTimestamp("fecha"));
-                e.setSolucion(rs.getString("solucion"));
-                e.setResueltoPor(rs.getString("resuelto_por"));
-                e.setFechaSolucion(rs.getTimestamp("fecha_solucion"));
-                e.setCapturaError(rs.getString("captura_error"));
-                e.setPasosReproducir(rs.getString("pasos_reproducir"));
-                e.setDescripcionSolucion(rs.getString("descripcion_solucion"));
-                lista.add(e);
-            }
-
-        } catch (SQLException ex) {
-            throw new ErrorDaoException("Error al buscar resueltos: " + ex.getMessage(), ex);
-        }
-
-        return lista;
+        });
     }
 
     /**
@@ -239,11 +212,9 @@ public class ErrorDAO {
             while (rs.next()) {
                 lista.add(rs.getString("resuelto_por"));
             }
-
         } catch (SQLException ex) {
             throw new ErrorDaoException("Error al obtener resolutores: " + ex.getMessage(), ex);
         }
-
         return lista;
     }
 

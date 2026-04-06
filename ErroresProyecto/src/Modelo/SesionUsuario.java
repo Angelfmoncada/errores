@@ -1,12 +1,12 @@
 package Modelo;
 
 /**
- * Singleton que almacena la sesión del usuario autenticado.
- * Permite acceder al username y rol desde cualquier parte de la app.
+ * Singleton thread-safe que almacena la sesion del usuario autenticado.
+ * Permite acceder al username y rol desde cualquier parte de la aplicacion.
  */
 public class SesionUsuario {
 
-    private static SesionUsuario instancia;
+    private static volatile SesionUsuario instancia;
 
     private String username;
     private String rol;
@@ -14,18 +14,31 @@ public class SesionUsuario {
     private SesionUsuario() {
     }
 
+    /**
+     * Retorna la instancia unica de SesionUsuario (double-checked locking).
+     */
     public static SesionUsuario getInstancia() {
         if (instancia == null) {
-            instancia = new SesionUsuario();
+            synchronized (SesionUsuario.class) {
+                if (instancia == null) {
+                    instancia = new SesionUsuario();
+                }
+            }
         }
         return instancia;
     }
 
+    /**
+     * Inicia la sesion con el usuario y rol proporcionados.
+     */
     public void iniciarSesion(String username, String rol) {
         this.username = username;
         this.rol = rol;
     }
 
+    /**
+     * Cierra la sesion actual limpiando los datos del usuario.
+     */
     public void cerrarSesion() {
         this.username = null;
         this.rol = null;
@@ -39,6 +52,9 @@ public class SesionUsuario {
         return rol;
     }
 
+    /**
+     * Verifica si hay un usuario autenticado.
+     */
     public boolean estaAutenticado() {
         return username != null;
     }

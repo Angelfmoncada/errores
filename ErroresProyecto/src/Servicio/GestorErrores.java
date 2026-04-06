@@ -10,7 +10,8 @@ import java.util.List;
 
 /**
  * Clase de servicio que gestiona los errores.
- * Hace de intermediario entre la GUI y la base de datos.
+ * Hace de intermediario entre la GUI y la capa de datos,
+ * aplicando logica de negocio antes de las operaciones.
  */
 public class GestorErrores {
 
@@ -28,6 +29,14 @@ public class GestorErrores {
     }
 
     /**
+     * Busca un error por su ID.
+     * @return el ErrorTicket encontrado o null si no existe
+     */
+    public ErrorTicket buscarPorId(int id) {
+        return errorDAO.buscarPorId(id);
+    }
+
+    /**
      * Devuelve una lista con todos los errores registrados.
      */
     public List<ErrorTicket> obtenerTodosErrores() {
@@ -36,10 +45,10 @@ public class GestorErrores {
 
     /**
      * Actualiza un error existente en la base de datos.
-     * Si la fase es SOLUCIONADO, registra automáticamente quién lo resolvió y cuándo.
+     * Si la fase es SOLUCIONADO, registra automaticamente quien lo resolvio y cuando.
+     * Si se revierte a una fase anterior, limpia los datos de resolucion.
      */
     public void actualizarError(ErrorTicket e) {
-        // Auto-poblar datos de resolución
         if (e.getFase() == Fase.SOLUCIONADO && e.getResueltoPor() == null) {
             e.setResueltoPor(SesionUsuario.getInstancia().getUsername());
             e.setFechaSolucion(new Timestamp(System.currentTimeMillis()));
@@ -55,6 +64,14 @@ public class GestorErrores {
      */
     public List<ErrorTicket> buscarErrores(String titulo, String fase) {
         return errorDAO.buscar(titulo, fase);
+    }
+
+    /**
+     * Busca errores resueltos con filtros avanzados.
+     */
+    public List<ErrorTicket> buscarResueltos(String titulo, String severidad,
+                                              String resueltoPor, Timestamp desde, Timestamp hasta) {
+        return errorDAO.buscarResueltos(titulo, severidad, resueltoPor, desde, hasta);
     }
 
     /**

@@ -1,18 +1,17 @@
 services:
   mysql:
-    image: mariadb:10.4
-    container_name: errores_db
+    image: mysql:8.0
+    container_name: errores_mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: errores
     ports:
       - "3306:3306"
     volumes:
-      - ./src/Script_BD.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./src/Script_BD.sql:/docker-entrypoint-initdb.d/Script_BD.sql
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin
+    image: phpmyadmin:latest
     container_name: errores_phpmyadmin
     environment:
       PMA_HOST: mysql

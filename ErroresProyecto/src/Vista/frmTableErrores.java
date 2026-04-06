@@ -1,70 +1,81 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package Vista;
 
+import Modelo.ErrorTicket;
 import Modelo.Fase;
 import Modelo.Severidad;
-import Modelo.ErrorTicket;
 import Servicio.GestorErrores;
+import Utilidades.ExportadorCSV;
 import Utilidades.ImagenCaptura;
+import Utilidades.Tema;
+
+import java.io.File;
 import java.util.List;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
 /**
+ * Vista principal para consultar, editar y eliminar errores.
+ * Incluye busqueda por titulo/fase, exportacion a CSV y vista de capturas.
  *
- * @author Mass
+ * Refactorizado: se elimino duplicacion de codigo usando GestorErrores.buscarPorId(),
+ * Fase.fromIndex(), Tema para estilos y ExportadorCSV para exportacion.
  */
 public class frmTableErrores extends javax.swing.JFrame {
-    
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(frmTableErrores.class.getName());
-    
+
+    private static final java.util.logging.Logger logger =
+        java.util.logging.Logger.getLogger(frmTableErrores.class.getName());
+
+    private final GestorErrores gestor = new GestorErrores();
     private DefaultTableModel modeloTabla;
     private javax.swing.JTextField txtBuscar;
     private javax.swing.JComboBox<String> cboFiltroFase;
     private javax.swing.JButton btnBuscar;
     private javax.swing.JButton btnVerCaptura;
+    private javax.swing.JButton btnExportarCSV;
     private javax.swing.JLabel lblDescSolucion;
     private javax.swing.JTextArea txtDescSolucion;
     private javax.swing.JScrollPane scrollDescSolucion;
 
-    /**
-     * Creates new form frmTableErrores
-     */
-    public  frmTableErrores() {
-        //this.setUndecorated(true);
+    public frmTableErrores() {
         initComponents();
         Utilidades.Icono.setLogotipo(this);
         this.setLocationRelativeTo(null);
 
+        crearPanelDescripcionSolucion();
+        configurarEventoFase();
+        crearBarraBusqueda();
+        configurarTabla();
+        cargarTabla();
+        agregarEventos();
+    }
 
-        // Crear campo de Descripción de Solución
-        lblDescSolucion = new javax.swing.JLabel("Descripción de la Solución:");
-        lblDescSolucion.setFont(new java.awt.Font("Trebuchet MS", 1, 14));
+    private void crearPanelDescripcionSolucion() {
+        lblDescSolucion = new javax.swing.JLabel("Descripcion de la Solucion:");
+        lblDescSolucion.setFont(Tema.FUENTE_SUBTITULO);
         txtDescSolucion = new javax.swing.JTextArea(3, 20);
         txtDescSolucion.setLineWrap(true);
         txtDescSolucion.setWrapStyleWord(true);
         scrollDescSolucion = new javax.swing.JScrollPane(txtDescSolucion);
 
-        // Panel para descripción de solución (se agrega al sur del contenido)
         javax.swing.JPanel panelDescSol = new javax.swing.JPanel(new java.awt.BorderLayout(5, 5));
-        panelDescSol.setBackground(new java.awt.Color(204, 204, 204));
+        panelDescSol.setBackground(Tema.FONDO);
         panelDescSol.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 14, 5, 14));
         panelDescSol.add(lblDescSolucion, java.awt.BorderLayout.NORTH);
         panelDescSol.add(scrollDescSolucion, java.awt.BorderLayout.CENTER);
         getContentPane().add(panelDescSol, java.awt.BorderLayout.SOUTH);
+    }
 
-        //Evento de activar txtSolución solo si el ComboBox está en "Solucionado"
+    private void configurarEventoFase() {
         cboFase.addActionListener(e -> {
             String faseSeleccionada = (String) cboFase.getSelectedItem();
-            boolean mostrarSolucion = faseSeleccionada.equals("Solucionado");
+            boolean mostrarSolucion = "Solucionado".equals(faseSeleccionada);
 
             txtSolucion.setVisible(mostrarSolucion);
             lblSolucion.setVisible(mostrarSolucion);
@@ -80,74 +91,87 @@ public class frmTableErrores extends javax.swing.JFrame {
         lblSolucion.setVisible(false);
         lblDescSolucion.setVisible(false);
         scrollDescSolucion.setVisible(false);
+    }
 
+    private void crearBarraBusqueda() {
         txtBuscar = new javax.swing.JTextField(15);
-        txtBuscar.setFont(new java.awt.Font("Trebuchet MS", 0, 14));
-        cboFiltroFase = new javax.swing.JComboBox<>(new String[]{"Todas", "REGISTRADO", "PROCESO", "SOLUCIONADO", "CERRADO"});
-        cboFiltroFase.setFont(new java.awt.Font("Trebuchet MS", 1, 12));
-        btnBuscar = new javax.swing.JButton();
-        btnBuscar.setBackground(new java.awt.Color(0, 0, 102));
-        btnBuscar.setFont(new java.awt.Font("Trebuchet MS", 1, 12));
-        btnBuscar.setForeground(new java.awt.Color(255, 255, 255));
-        btnBuscar.setText("Buscar");
+        txtBuscar.setFont(Tema.FUENTE_CAMPO);
+
+        String[] opciones = new String[Fase.values().length + 1];
+        opciones[0] = "Todas";
+        String[] etiquetas = Fase.getEtiquetas();
+        for (int i = 0; i < etiquetas.length; i++) {
+            opciones[i + 1] = etiquetas[i].toUpperCase();
+        }
+        cboFiltroFase = new javax.swing.JComboBox<>(opciones);
+        cboFiltroFase.setFont(Tema.FUENTE_BOTON);
+
+        btnBuscar = crearBoton("Buscar", Tema.PRIMARIO);
         btnBuscar.addActionListener(e -> buscarErrores());
 
-        btnVerCaptura = new javax.swing.JButton("Ver Captura");
-        btnVerCaptura.setBackground(new java.awt.Color(0, 102, 0));
-        btnVerCaptura.setFont(new java.awt.Font("Trebuchet MS", 1, 12));
-        btnVerCaptura.setForeground(new java.awt.Color(255, 255, 255));
+        btnVerCaptura = crearBoton("Ver Captura", new java.awt.Color(0, 102, 0));
         btnVerCaptura.addActionListener(e -> verCaptura());
 
+        btnExportarCSV = crearBoton("Exportar CSV", Tema.PRIMARIO_CLARO);
+        btnExportarCSV.addActionListener(e -> exportarCSV());
+
         javax.swing.JPanel panelBusqueda = new javax.swing.JPanel();
-        panelBusqueda.setBackground(new java.awt.Color(204, 204, 204));
+        panelBusqueda.setBackground(Tema.FONDO);
         panelBusqueda.add(new javax.swing.JLabel("Buscar:"));
         panelBusqueda.add(txtBuscar);
         panelBusqueda.add(new javax.swing.JLabel("Fase:"));
         panelBusqueda.add(cboFiltroFase);
         panelBusqueda.add(btnBuscar);
         panelBusqueda.add(btnVerCaptura);
+        panelBusqueda.add(btnExportarCSV);
         getContentPane().add(panelBusqueda, java.awt.BorderLayout.NORTH);
-
-        configurarTabla();
-        cargarTabla();
-        agregarEventos();
     }
-    
-    
-    //Crea el modelo tabla, lo asigna a JTable1 y define que solo se pueda seleccionar una fila sola a la vez
-     private void configurarTabla() {
+
+    private javax.swing.JButton crearBoton(String texto, java.awt.Color fondo) {
+        javax.swing.JButton btn = new javax.swing.JButton(texto);
+        btn.setBackground(fondo);
+        btn.setFont(Tema.FUENTE_BOTON);
+        btn.setForeground(Tema.TEXTO_CLARO);
+        return btn;
+    }
+
+    private void configurarTabla() {
         modeloTabla = new DefaultTableModel(
-                new Object[]{"ID", "Título", "Descripción", "Severidad", "Fase", "Fecha",
-                             "Solución", "Resuelto Por", "Fecha Solución"}, 0
-        );
-        
-        
+            new Object[]{"ID", "Titulo", "Descripcion", "Severidad", "Fase", "Fecha",
+                         "Solucion", "Resuelto Por", "Fecha Solucion"}, 0
+        ) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
         jTable1.setModel(modeloTabla);
         jTable1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        jTable1.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
+
+        Tema.aplicarEstiloTabla(jTable1);
+
+        int[] anchos = {45, 150, 210, 95, 115, 130, 170, 115, 140};
+        for (int i = 0; i < anchos.length; i++) {
+            jTable1.getColumnModel().getColumn(i).setPreferredWidth(anchos[i]);
+        }
     }
 
     private void agregarEventos() {
-
-        //Evento que se activa cuando se selecciona una fila y se muestran los datos
-        jTable1.getSelectionModel().addListSelectionListener(e -> cargarDatosSeleccion());
+        jTable1.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                cargarDatosSeleccion();
+            }
+        });
     }
-    //Carga los datos de la tabla 
+
     private void cargarTabla() {
         modeloTabla.setRowCount(0);
         try {
-            List<ErrorTicket> errores = new GestorErrores().obtenerTodosErrores();
+            List<ErrorTicket> errores = gestor.obtenerTodosErrores();
             for (ErrorTicket e : errores) {
-                modeloTabla.addRow(new Object[]{
-                        e.getId(),
-                        e.getTitulo(),
-                        e.getDescripcion(),
-                        e.getSeveridad(),
-                        e.getFase(),
-                        e.getFecha(),
-                        e.getSolucion(),
-                        e.getResueltoPor(),
-                        e.getFechaSolucion()
-                });
+                agregarFilaTabla(e);
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
@@ -155,98 +179,70 @@ public class frmTableErrores extends javax.swing.JFrame {
         }
     }
 
+    private void agregarFilaTabla(ErrorTicket e) {
+        modeloTabla.addRow(new Object[]{
+            e.getId(),
+            e.getTitulo(),
+            e.getDescripcion(),
+            e.getSeveridad(),
+            e.getFase(),
+            e.getFecha(),
+            e.getSolucion(),
+            e.getResueltoPor(),
+            e.getFechaSolucion()
+        });
+    }
 
-    /*
-  Carga los datos del error seleccionado en la tabla
-  hacia los componentes de la interfaz. 
-  Actualiza el combobox de fase y el campo de texto de solución
-  según la fila seleccionada.
- */
-   private void cargarDatosSeleccion() {
-    int fila = jTable1.getSelectedRow();
-    if (fila >= 0) { //Verifica que exista una fila en la tabla
-        // Cargar la fase usando IF
-        Object faseTabla = jTable1.getValueAt(fila, 4); // Fase es columna 4
+    private void cargarDatosSeleccion() {
+        int fila = jTable1.getSelectedRow();
+        if (fila < 0) return;
+
+        Object faseTabla = jTable1.getValueAt(fila, 4);
         if (faseTabla != null) {
-            
-           //Asigna la fase dependiendo de la fase seleccionada del combobox
             String faseStr = faseTabla.toString();
-            if (faseStr.equals("REGISTRADO")) {
-                cboFase.setSelectedIndex(0);
-            } else if (faseStr.equals("PROCESO")) {
-                cboFase.setSelectedIndex(1);
-            } else if (faseStr.equals("SOLUCIONADO")) {
-                cboFase.setSelectedIndex(2);
-            } else if (faseStr.equals("CERRADO")) {
-                cboFase.setSelectedIndex(3);
-            }
-        }
-
-        //Carga la solución en el campo (columna 6 despues de agregar fecha)
-        txtSolucion.setText((String) jTable1.getValueAt(fila, 6));
-
-        // Cargar descripción de solución del error seleccionado
-        int id = (int) jTable1.getValueAt(fila, 0);
-        try {
-            List<ErrorTicket> errores = new GestorErrores().obtenerTodosErrores();
-            for (ErrorTicket err : errores) {
-                if (err.getId() == id) {
-                    txtDescSolucion.setText(err.getDescripcionSolucion() != null ? err.getDescripcionSolucion() : "");
+            Fase[] fases = Fase.values();
+            for (int i = 0; i < fases.length; i++) {
+                if (fases[i].name().equals(faseStr)) {
+                    cboFase.setSelectedIndex(i);
                     break;
                 }
             }
-        } catch (Exception ex) {
-            txtDescSolucion.setText("");
+        }
+
+        txtSolucion.setText((String) jTable1.getValueAt(fila, 6));
+
+        int id = (int) jTable1.getValueAt(fila, 0);
+        ErrorTicket err = gestor.buscarPorId(id);
+        if (err != null) {
+            txtDescSolucion.setText(err.getDescripcionSolucion() != null ? err.getDescripcionSolucion() : "");
         }
     }
-}
 
-    //Guarda los cambios seleccionados sobre el error seleccionado
     private void guardarCambios() {
-        int fila = jTable1.getSelectedRow(); //Obtiene la fila seleccionada
+        int fila = jTable1.getSelectedRow();
         if (fila < 0) {
             JOptionPane.showMessageDialog(this, "Seleccione un error de la tabla");
             return;
         }
-        //Trae los datos de la fila seleccionada
+
         int id = (int) jTable1.getValueAt(fila, 0);
         String titulo = (String) jTable1.getValueAt(fila, 1);
         String descripcion = (String) jTable1.getValueAt(fila, 2);
         Severidad sev = (Severidad) jTable1.getValueAt(fila, 3);
-        //String usuario = (String) jTable1.getValueAt(fila, 5);
         String solucion = txtSolucion.getText().trim();
+        Fase faseSeleccionada = Fase.fromIndex(cboFase.getSelectedIndex());
 
-        // Obtener la fase seleccionada 
-        Fase faseSeleccionada = Fase.REGISTRADO; 
-        int index = cboFase.getSelectedIndex();
-        if (index == 0) {
-            faseSeleccionada = Fase.REGISTRADO;
-        } else if (index == 1) {
-            faseSeleccionada = Fase.PROCESO;
-        } else if (index == 2) {
-            faseSeleccionada = Fase.SOLUCIONADO;
-        } else if (index == 3) {
-            faseSeleccionada = Fase.CERRADO;
-        }
-
-        // Crear objeto ErrorTicket y actualizar
-        ErrorTicket error = new ErrorTicket(
-    titulo,
-    descripcion,
-    sev,
-    faseSeleccionada
-);
-        //Asigna solución, descripción de solución e ID al error
+        ErrorTicket error = new ErrorTicket(titulo, descripcion, sev, faseSeleccionada);
         error.setSolucion(solucion);
+        error.setId(id);
+
         String descSol = txtDescSolucion.getText().trim();
         if (!descSol.isEmpty()) {
             error.setDescripcionSolucion(descSol);
         }
-        error.setId(id);
-        
-        //Actualiza el error en la base de datos
+
         try {
-            new GestorErrores().actualizarError(error);
+            gestor.actualizarError(error);
             JOptionPane.showMessageDialog(this, "Error actualizado correctamente");
             cargarTabla();
         } catch (Exception ex) {
@@ -255,7 +251,6 @@ public class frmTableErrores extends javax.swing.JFrame {
         }
     }
 
-    //Busca errores por titulo y fase
     private void buscarErrores() {
         String titulo = txtBuscar.getText().trim();
         String fase = (String) cboFiltroFase.getSelectedItem();
@@ -265,19 +260,9 @@ public class frmTableErrores extends javax.swing.JFrame {
 
         modeloTabla.setRowCount(0);
         try {
-            List<ErrorTicket> errores = new GestorErrores().buscarErrores(titulo, fase);
+            List<ErrorTicket> errores = gestor.buscarErrores(titulo, fase);
             for (ErrorTicket e : errores) {
-                modeloTabla.addRow(new Object[]{
-                        e.getId(),
-                        e.getTitulo(),
-                        e.getDescripcion(),
-                        e.getSeveridad(),
-                        e.getFase(),
-                        e.getFecha(),
-                        e.getSolucion(),
-                        e.getResueltoPor(),
-                        e.getFechaSolucion()
-                });
+                agregarFilaTabla(e);
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
@@ -285,7 +270,6 @@ public class frmTableErrores extends javax.swing.JFrame {
         }
     }
 
-    //Muestra la captura de pantalla del error seleccionado
     private void verCaptura() {
         int fila = jTable1.getSelectedRow();
         if (fila < 0) {
@@ -293,44 +277,60 @@ public class frmTableErrores extends javax.swing.JFrame {
             return;
         }
 
-        // Obtener el error completo para acceder a la captura
         int id = (int) jTable1.getValueAt(fila, 0);
+        ErrorTicket errorSel = gestor.buscarPorId(id);
+
+        if (errorSel == null || errorSel.getCapturaError() == null || errorSel.getCapturaError().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Este error no tiene captura adjunta");
+            return;
+        }
+
+        ImageIcon imagen = ImagenCaptura.cargarImagenCompleta(errorSel.getCapturaError(), 800, 600);
+        if (imagen == null) {
+            JOptionPane.showMessageDialog(this, "No se pudo cargar la imagen");
+            return;
+        }
+
+        JDialog dialogo = new JDialog(this, "Captura: " + errorSel.getTitulo(), true);
+        JLabel lblImagen = new JLabel(imagen);
+        JScrollPane scroll = new JScrollPane(lblImagen);
+        dialogo.add(scroll);
+        dialogo.setSize(850, 650);
+        dialogo.setLocationRelativeTo(this);
+        dialogo.setVisible(true);
+    }
+
+    /**
+     * Exporta los errores visibles en la tabla a un archivo CSV.
+     */
+    private void exportarCSV() {
         try {
-            List<ErrorTicket> errores = new GestorErrores().obtenerTodosErrores();
-            ErrorTicket errorSel = null;
-            for (ErrorTicket e : errores) {
-                if (e.getId() == id) {
-                    errorSel = e;
-                    break;
+            List<ErrorTicket> errores = gestor.obtenerTodosErrores();
+            if (errores.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "No hay errores para exportar");
+                return;
+            }
+
+            JFileChooser fc = new JFileChooser();
+            fc.setDialogTitle("Guardar reporte CSV");
+            fc.setFileFilter(new FileNameExtensionFilter("Archivo CSV (*.csv)", "csv"));
+            fc.setSelectedFile(new File("reporte_errores.csv"));
+
+            if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+                File archivo = fc.getSelectedFile();
+                if (!archivo.getName().endsWith(".csv")) {
+                    archivo = new File(archivo.getAbsolutePath() + ".csv");
                 }
+                ExportadorCSV.exportar(errores, archivo);
+                JOptionPane.showMessageDialog(this,
+                    "Reporte exportado exitosamente:\n" + archivo.getAbsolutePath());
             }
-
-            if (errorSel == null || errorSel.getCapturaError() == null || errorSel.getCapturaError().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Este error no tiene captura adjunta");
-                return;
-            }
-
-            ImageIcon imagen = ImagenCaptura.cargarImagenCompleta(errorSel.getCapturaError(), 800, 600);
-            if (imagen == null) {
-                JOptionPane.showMessageDialog(this, "No se pudo cargar la imagen: " + errorSel.getCapturaError());
-                return;
-            }
-
-            // Mostrar en un diálogo
-            JDialog dialogo = new JDialog(this, "Captura del Error: " + errorSel.getTitulo(), true);
-            JLabel lblImagen = new JLabel(imagen);
-            JScrollPane scroll = new JScrollPane(lblImagen);
-            dialogo.add(scroll);
-            dialogo.setSize(850, 650);
-            dialogo.setLocationRelativeTo(this);
-            dialogo.setVisible(true);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
-                "Error al cargar captura: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                "Error al exportar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    //Elimina el error seleccionado de la tabla y la base de datos
     private void eliminarError() {
         int fila = jTable1.getSelectedRow();
         if (fila < 0) {
@@ -339,13 +339,13 @@ public class frmTableErrores extends javax.swing.JFrame {
         }
 
         int confirmacion = JOptionPane.showConfirmDialog(this,
-                "¿Está seguro de eliminar este error?", "Confirmar eliminación",
+                "Esta seguro de eliminar este error?", "Confirmar eliminacion",
                 JOptionPane.YES_NO_OPTION);
 
         if (confirmacion == JOptionPane.YES_OPTION) {
             try {
                 int id = (int) jTable1.getValueAt(fila, 0);
-                new GestorErrores().eliminarError(id);
+                gestor.eliminarError(id);
                 JOptionPane.showMessageDialog(this, "Error eliminado correctamente");
                 cargarTabla();
             } catch (Exception ex) {
@@ -355,11 +355,6 @@ public class frmTableErrores extends javax.swing.JFrame {
         }
     }
 
-    /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
-     */
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -382,7 +377,7 @@ public class frmTableErrores extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jPanel1.setBackground(new java.awt.Color(204, 204, 204));
+        jPanel1.setBackground(Tema.FONDO);
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -397,47 +392,47 @@ public class frmTableErrores extends javax.swing.JFrame {
         ));
         jScrollPane1.setViewportView(jTable1);
 
-        jLabel1.setFont(new java.awt.Font("Trebuchet MS", 1, 14)); // NOI18N
+        jLabel1.setFont(Tema.FUENTE_SUBTITULO);
         jLabel1.setText("Fase");
 
-        cboFase.setFont(new java.awt.Font("Trebuchet MS", 1, 12)); // NOI18N
-        cboFase.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Registrado", "Proceso", "Solucionado", "Cerrado" }));
+        cboFase.setFont(Tema.FUENTE_BOTON);
+        cboFase.setModel(new javax.swing.DefaultComboBoxModel<>(Fase.getEtiquetas()));
 
-        jLabel2.setFont(new java.awt.Font("Trebuchet MS", 1, 24)); // NOI18N
+        jLabel2.setFont(Tema.FUENTE_TITULO);
         jLabel2.setText("Errores");
 
-        lblSolucion.setFont(new java.awt.Font("Trebuchet MS", 1, 14)); // NOI18N
+        lblSolucion.setFont(Tema.FUENTE_SUBTITULO);
         lblSolucion.setText("Solucion");
 
         txtSolucion.setColumns(20);
         txtSolucion.setRows(5);
         jScrollPane2.setViewportView(txtSolucion);
 
-        btnSalir.setBackground(new java.awt.Color(255, 0, 0));
-        btnSalir.setFont(new java.awt.Font("Trebuchet MS", 1, 14)); // NOI18N
-        btnSalir.setForeground(new java.awt.Color(255, 255, 255));
+        btnSalir.setBackground(Tema.PELIGRO);
+        btnSalir.setFont(Tema.FUENTE_BOTON);
+        btnSalir.setForeground(Tema.TEXTO_CLARO);
         btnSalir.setText("Salir");
         btnSalir.addActionListener(this::btnSalirActionPerformed);
 
-        btnGuardar.setBackground(new java.awt.Color(0, 0, 102));
-        btnGuardar.setFont(new java.awt.Font("Trebuchet MS", 1, 14)); // NOI18N
-        btnGuardar.setForeground(new java.awt.Color(255, 255, 255));
+        btnGuardar.setBackground(Tema.PRIMARIO);
+        btnGuardar.setFont(Tema.FUENTE_BOTON);
+        btnGuardar.setForeground(Tema.TEXTO_CLARO);
         btnGuardar.setText("Guardar");
         btnGuardar.addActionListener(this::btnGuardarActionPerformed);
 
         btnEliminar.setBackground(new java.awt.Color(153, 0, 0));
-        btnEliminar.setFont(new java.awt.Font("Trebuchet MS", 1, 14)); // NOI18N
-        btnEliminar.setForeground(new java.awt.Color(255, 255, 255));
+        btnEliminar.setFont(Tema.FUENTE_BOTON);
+        btnEliminar.setForeground(Tema.TEXTO_CLARO);
         btnEliminar.setText("Eliminar");
         btnEliminar.addActionListener(e -> eliminarError());
 
-        btnRegresarPrin.setBackground(new java.awt.Color(255, 51, 51));
-        btnRegresarPrin.setFont(new java.awt.Font("Trebuchet MS", 1, 14)); // NOI18N
-        btnRegresarPrin.setForeground(new java.awt.Color(255, 255, 255));
+        btnRegresarPrin.setBackground(Tema.PELIGRO);
+        btnRegresarPrin.setFont(Tema.FUENTE_BOTON);
+        btnRegresarPrin.setForeground(Tema.TEXTO_CLARO);
         btnRegresarPrin.setText("Regresar");
         btnRegresarPrin.addActionListener(this::btnRegresarPrinActionPerformed);
 
-        jPanel2.setBackground(new java.awt.Color(0, 0, 102));
+        jPanel2.setBackground(Tema.PRIMARIO);
         jPanel2.setPreferredSize(new java.awt.Dimension(0, 25));
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -451,7 +446,7 @@ public class frmTableErrores extends javax.swing.JFrame {
             .addGap(0, 25, Short.MAX_VALUE)
         );
 
-        jPanel4.setBackground(new java.awt.Color(0, 0, 102));
+        jPanel4.setBackground(Tema.PRIMARIO);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -538,37 +533,25 @@ public class frmTableErrores extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalirActionPerformed
+    private void btnSalirActionPerformed(java.awt.event.ActionEvent evt) {
         int confirmacion = JOptionPane.showConfirmDialog(this,
-                "¿Está seguro de que desea salir?", "Confirmar salida",
+                "Esta seguro de que desea salir?", "Confirmar salida",
                 JOptionPane.YES_NO_OPTION);
         if (confirmacion == JOptionPane.YES_OPTION) {
             System.exit(0);
         }
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnSalirActionPerformed
+    }
 
-    private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardarActionPerformed
+    private void btnGuardarActionPerformed(java.awt.event.ActionEvent evt) {
         guardarCambios();
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnGuardarActionPerformed
+    }
 
-    private void btnRegresarPrinActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegresarPrinActionPerformed
-        new  FrmPrincipal().setVisible(true);
+    private void btnRegresarPrinActionPerformed(java.awt.event.ActionEvent evt) {
+        new FrmPrincipal().setVisible(true);
         this.dispose();
+    }
 
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnRegresarPrinActionPerformed
-
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -579,9 +562,6 @@ public class frmTableErrores extends javax.swing.JFrame {
         } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
             logger.log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
-
-        /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new frmTableErrores().setVisible(true));
     }
 
@@ -602,7 +582,4 @@ public class frmTableErrores extends javax.swing.JFrame {
     private javax.swing.JLabel lblSolucion;
     private javax.swing.JTextArea txtSolucion;
     // End of variables declaration//GEN-END:variables
-
-
 }
-

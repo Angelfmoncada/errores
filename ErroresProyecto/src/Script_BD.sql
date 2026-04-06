@@ -9,7 +9,12 @@ CREATE TABLE errores (
     severidad VARCHAR(20) NOT NULL,
     fase VARCHAR(20) NOT NULL,
     solucion TEXT,
-    fecha DATE DEFAULT (CURRENT_DATE),
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    captura_error TEXT,
+    pasos_reproducir TEXT,
+    resuelto_por VARCHAR(100),
+    fecha_solucion TIMESTAMP NULL,
+    descripcion_solucion TEXT,
     PRIMARY KEY (id)
 );
 

@@ -1,25 +1,29 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package Vista;
+
+import Modelo.ErrorTicket;
 import Modelo.Fase;
 import Modelo.Severidad;
-import Modelo.ErrorTicket;
 import Servicio.GestorErrores;
 import Utilidades.ImagenCaptura;
+import Utilidades.Tema;
+import Utilidades.ValidadorCampos;
+
 import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
+ * Formulario para registrar un nuevo error en el sistema.
+ * Incluye validacion visual de campos, adjunto de capturas y pasos para reproducir.
  *
- * @author Mass
+ * Refactorizado: se usa Severidad.fromIndex() en lugar de if-else repetidos,
+ * ValidadorCampos para validacion visual y Tema para estilos consistentes.
  */
 public class FrmRegistrarError extends javax.swing.JFrame {
 
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(FrmRegistrarError.class.getName());
+    private static final java.util.logging.Logger logger =
+        java.util.logging.Logger.getLogger(FrmRegistrarError.class.getName());
 
     private File archivoCaptura;
     private javax.swing.JButton btnAdjuntarCaptura;
@@ -35,36 +39,34 @@ public class FrmRegistrarError extends javax.swing.JFrame {
     }
 
     private void agregarComponentesExtra() {
-        // Panel inferior con dos secciones: pasos para reproducir y captura
         javax.swing.JPanel panelExtra = new javax.swing.JPanel();
         panelExtra.setLayout(new javax.swing.BoxLayout(panelExtra, javax.swing.BoxLayout.Y_AXIS));
-        panelExtra.setBackground(new java.awt.Color(204, 204, 204));
+        panelExtra.setBackground(Tema.FONDO);
 
-        // --- Sección: Pasos para reproducir ---
+        // Seccion: Pasos para reproducir
         javax.swing.JPanel panelPasos = new javax.swing.JPanel(new java.awt.BorderLayout(5, 5));
-        panelPasos.setBackground(new java.awt.Color(204, 204, 204));
+        panelPasos.setBackground(Tema.FONDO);
         panelPasos.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
         javax.swing.JLabel lblPasos = new javax.swing.JLabel("Pasos para Reproducir:");
-        lblPasos.setFont(new java.awt.Font("Trebuchet MS", 1, 14));
+        lblPasos.setFont(Tema.FUENTE_SUBTITULO);
         panelPasos.add(lblPasos, java.awt.BorderLayout.NORTH);
 
         txtPasosReproducir = new javax.swing.JTextArea(4, 30);
         txtPasosReproducir.setLineWrap(true);
         txtPasosReproducir.setWrapStyleWord(true);
-        javax.swing.JScrollPane scrollPasos = new javax.swing.JScrollPane(txtPasosReproducir);
-        panelPasos.add(scrollPasos, java.awt.BorderLayout.CENTER);
-
+        txtPasosReproducir.setFont(Tema.FUENTE_CAMPO);
+        panelPasos.add(new javax.swing.JScrollPane(txtPasosReproducir), java.awt.BorderLayout.CENTER);
         panelExtra.add(panelPasos);
 
-        // --- Sección: Captura de pantalla ---
+        // Seccion: Captura de pantalla
         lblCaptura = new javax.swing.JLabel("Captura:");
-        lblCaptura.setFont(new java.awt.Font("Trebuchet MS", 1, 14));
+        lblCaptura.setFont(Tema.FUENTE_SUBTITULO);
 
         btnAdjuntarCaptura = new javax.swing.JButton("Adjuntar Captura");
         btnAdjuntarCaptura.setBackground(new java.awt.Color(0, 102, 0));
-        btnAdjuntarCaptura.setFont(new java.awt.Font("Trebuchet MS", 1, 12));
-        btnAdjuntarCaptura.setForeground(new java.awt.Color(255, 255, 255));
+        btnAdjuntarCaptura.setFont(Tema.FUENTE_BOTON);
+        btnAdjuntarCaptura.setForeground(Tema.TEXTO_CLARO);
         btnAdjuntarCaptura.addActionListener(e -> seleccionarCaptura());
 
         lblPreviewCaptura = new javax.swing.JLabel("Sin captura adjunta");
@@ -73,11 +75,10 @@ public class FrmRegistrarError extends javax.swing.JFrame {
         lblPreviewCaptura.setBorder(javax.swing.BorderFactory.createLineBorder(java.awt.Color.GRAY));
 
         javax.swing.JPanel panelCaptura = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
-        panelCaptura.setBackground(new java.awt.Color(204, 204, 204));
+        panelCaptura.setBackground(Tema.FONDO);
         panelCaptura.add(lblCaptura);
         panelCaptura.add(btnAdjuntarCaptura);
         panelCaptura.add(lblPreviewCaptura);
-
         panelExtra.add(panelCaptura);
 
         getContentPane().add(panelExtra, java.awt.BorderLayout.SOUTH);
@@ -87,11 +88,10 @@ public class FrmRegistrarError extends javax.swing.JFrame {
     private void seleccionarCaptura() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Seleccionar captura de pantalla");
-        fileChooser.setFileFilter(new FileNameExtensionFilter("Imágenes (PNG, JPG, GIF)", "png", "jpg", "jpeg", "gif"));
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Imagenes (PNG, JPG, GIF)", "png", "jpg", "jpeg", "gif"));
 
         if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             archivoCaptura = fileChooser.getSelectedFile();
-            // Mostrar miniatura
             javax.swing.ImageIcon miniatura = ImagenCaptura.cargarMiniatura(archivoCaptura.getAbsolutePath(), 150, 100);
             if (miniatura != null) {
                 lblPreviewCaptura.setIcon(miniatura);
@@ -101,6 +101,26 @@ public class FrmRegistrarError extends javax.swing.JFrame {
                 lblPreviewCaptura.setText(archivoCaptura.getName());
             }
         }
+    }
+
+    /**
+     * Valida los campos del formulario con retroalimentacion visual.
+     * @return true si todos los campos obligatorios son validos
+     */
+    private boolean validarFormulario() {
+        boolean valido = true;
+
+        if (!ValidadorCampos.validarNoVacio(txtTitulo)) {
+            valido = false;
+        } else if (!ValidadorCampos.validarLongitud(txtTitulo, 100)) {
+            valido = false;
+        }
+
+        if (!ValidadorCampos.validarNoVacio(txtDescripcion)) {
+            valido = false;
+        }
+
+        return valido;
     }
 
     @SuppressWarnings("unchecked")
@@ -122,63 +142,54 @@ public class FrmRegistrarError extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jPanel1.setBackground(new java.awt.Color(204, 204, 204));
+        jPanel1.setBackground(Tema.FONDO);
 
-        jLabel1.setFont(new java.awt.Font("Trebuchet MS", 1, 14));
-        jLabel1.setText("Descripción:");
+        jLabel1.setFont(Tema.FUENTE_SUBTITULO);
+        jLabel1.setText("Descripcion:");
 
-        jLabel2.setFont(new java.awt.Font("Trebuchet MS", 1, 14));
+        jLabel2.setFont(Tema.FUENTE_SUBTITULO);
         jLabel2.setText("Error:");
 
-        txtTitulo.setFont(new java.awt.Font("Trebuchet MS", 3, 14));
+        txtTitulo.setFont(Tema.FUENTE_CAMPO);
 
         txtDescripcion.setColumns(20);
         txtDescripcion.setRows(5);
+        txtDescripcion.setFont(Tema.FUENTE_CAMPO);
         jScrollPane1.setViewportView(txtDescripcion);
 
-        cboSeveridad.setFont(new java.awt.Font("Trebuchet MS", 1, 14));
-        cboSeveridad.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Baja", "Media", "Alta", "Critica" }));
+        cboSeveridad.setFont(Tema.FUENTE_SUBTITULO);
+        cboSeveridad.setModel(new javax.swing.DefaultComboBoxModel<>(Severidad.getEtiquetas()));
 
-        jLabel3.setFont(new java.awt.Font("Trebuchet MS", 1, 14));
+        jLabel3.setFont(Tema.FUENTE_SUBTITULO);
         jLabel3.setText("Severidad");
 
-        btnGuardarError.setBackground(new java.awt.Color(0, 0, 102));
-        btnGuardarError.setFont(new java.awt.Font("Trebuchet MS", 3, 14));
-        btnGuardarError.setForeground(new java.awt.Color(255, 255, 255));
+        btnGuardarError.setBackground(Tema.PRIMARIO);
+        btnGuardarError.setFont(Tema.FUENTE_BOTON);
+        btnGuardarError.setForeground(Tema.TEXTO_CLARO);
         btnGuardarError.setText("Guardar");
         btnGuardarError.addActionListener(this::btnGuardarErrorActionPerformed);
 
-        btnRegresarPrin.setBackground(new java.awt.Color(255, 51, 51));
-        btnRegresarPrin.setFont(new java.awt.Font("Trebuchet MS", 1, 14));
-        btnRegresarPrin.setForeground(new java.awt.Color(255, 255, 255));
+        btnRegresarPrin.setBackground(Tema.PELIGRO);
+        btnRegresarPrin.setFont(Tema.FUENTE_BOTON);
+        btnRegresarPrin.setForeground(Tema.TEXTO_CLARO);
         btnRegresarPrin.setText("Regresar");
         btnRegresarPrin.addActionListener(this::btnRegresarPrinActionPerformed);
 
-        jPanel2.setBackground(new java.awt.Color(0, 0, 102));
-
+        jPanel2.setBackground(Tema.PRIMARIO);
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 0, Short.MAX_VALUE));
         jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 18, Short.MAX_VALUE)
-        );
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 18, Short.MAX_VALUE));
 
-        jPanel3.setBackground(new java.awt.Color(0, 0, 102));
-
+        jPanel3.setBackground(Tema.PRIMARIO);
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 0, Short.MAX_VALUE));
         jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 18, Short.MAX_VALUE)
-        );
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 18, Short.MAX_VALUE));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -249,54 +260,30 @@ public class FrmRegistrarError extends javax.swing.JFrame {
     }
 
     private void btnRegresarPrinActionPerformed(java.awt.event.ActionEvent evt) {
-        new  FrmPrincipal().setVisible(true);
+        new FrmPrincipal().setVisible(true);
         this.dispose();
-
-
     }
 
     private void btnGuardarErrorActionPerformed(java.awt.event.ActionEvent evt) {
-        if (txtTitulo.getText().trim().isEmpty() || txtDescripcion.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Complete todos los campos");
+        if (!validarFormulario()) {
+            JOptionPane.showMessageDialog(this, "Corrija los campos marcados en rojo");
             return;
         }
 
-        if (txtTitulo.getText().trim().length() > 100) {
-            JOptionPane.showMessageDialog(this, "El título no puede exceder 100 caracteres");
-            return;
-        }
-
-        int index = cboSeveridad.getSelectedIndex();
-        Modelo.Severidad sev;
-
-        if (index == 0) {
-            sev = Modelo.Severidad.BAJA;
-        } else if (index == 1) {
-            sev = Modelo.Severidad.MEDIA;
-        } else if (index == 2) {
-            sev = Modelo.Severidad.ALTA;
-        } else {
-            sev = Modelo.Severidad.CRITICA;
-        }
-
-        String solucion = null;
+        Severidad sev = Severidad.fromIndex(cboSeveridad.getSelectedIndex());
 
         ErrorTicket error = new ErrorTicket(
             txtTitulo.getText().trim(),
             txtDescripcion.getText().trim(),
             sev,
-            Modelo.Fase.REGISTRADO
+            Fase.REGISTRADO
         );
 
-        error.setSolucion(solucion);
-
-        // Agregar pasos para reproducir si se proporcionaron
         String pasos = txtPasosReproducir.getText().trim();
         if (!pasos.isEmpty()) {
             error.setPasosReproducir(pasos);
         }
 
-        // Copiar captura si se adjuntó una
         if (archivoCaptura != null) {
             try {
                 String rutaCaptura = ImagenCaptura.copiarImagen(archivoCaptura);
@@ -309,21 +296,16 @@ public class FrmRegistrarError extends javax.swing.JFrame {
         }
 
         try {
-            GestorErrores gestor = new GestorErrores();
-            gestor.registrarError(error);
-            javax.swing.JOptionPane.showMessageDialog(this, "Error registrado correctamente");
-            txtTitulo.setText("");
-            txtDescripcion.setText("");
-            cboSeveridad.setSelectedIndex(0);
+            new GestorErrores().registrarError(error);
+            JOptionPane.showMessageDialog(this, "Error registrado correctamente");
+            limpiarCampos();
             this.dispose();
             new FrmPrincipal().setVisible(true);
         } catch (Exception ex) {
-            javax.swing.JOptionPane.showMessageDialog(this,
-                "Error al guardar: " + ex.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                "Error al guardar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
-
     }
-
 
     public static void main(String args[]) {
         try {
@@ -336,12 +318,10 @@ public class FrmRegistrarError extends javax.swing.JFrame {
         } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
             logger.log(java.util.logging.Level.SEVERE, null, ex);
         }
-
-
         java.awt.EventQueue.invokeLater(() -> new FrmRegistrarError().setVisible(true));
     }
 
-    // Variables declaration 
+    // Variables declaration
     private javax.swing.JButton btnGuardarError;
     private javax.swing.JButton btnRegresarPrin;
     private javax.swing.ButtonGroup buttonGroup1;
@@ -356,14 +336,15 @@ public class FrmRegistrarError extends javax.swing.JFrame {
     private javax.swing.JTextArea txtDescripcion;
     private javax.swing.JTextField txtTitulo;
 
-
     private void limpiarCampos() {
         txtTitulo.setText("");
         txtDescripcion.setText("");
+        txtPasosReproducir.setText("");
         cboSeveridad.setSelectedIndex(0);
+        archivoCaptura = null;
+        lblPreviewCaptura.setIcon(null);
+        lblPreviewCaptura.setText("Sin captura adjunta");
+        ValidadorCampos.resetearBorde(txtTitulo);
+        ValidadorCampos.resetearBorde(txtDescripcion);
     }
-
-   
 }
-
-
