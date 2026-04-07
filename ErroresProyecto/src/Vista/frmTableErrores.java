@@ -5,7 +5,6 @@ import Modelo.Fase;
 import Modelo.SesionUsuario;
 import Modelo.Severidad;
 import Servicio.GestorErrores;
-import Utilidades.ExportadorCSV;
 import Utilidades.ImagenCaptura;
 import Utilidades.Tema;
 
@@ -46,7 +45,7 @@ public class frmTableErrores extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> cboFiltroFase;
     private javax.swing.JButton btnBuscar;
     private javax.swing.JButton btnVerCaptura;
-    private javax.swing.JButton btnExportarCSV;
+    private javax.swing.JButton btnAdjuntarCaptura;
     private javax.swing.JLabel lblDescSolucion;
     private javax.swing.JTextArea txtDescSolucion;
     private javax.swing.JScrollPane scrollDescSolucion;
@@ -160,8 +159,8 @@ public class frmTableErrores extends javax.swing.JFrame {
         btnVerCaptura = crearBoton("Ver Captura", new java.awt.Color(0, 102, 0));
         btnVerCaptura.addActionListener(e -> verCaptura());
 
-        btnExportarCSV = crearBoton("Exportar CSV", Tema.PRIMARIO_CLARO);
-        btnExportarCSV.addActionListener(e -> exportarCSV());
+        btnAdjuntarCaptura = crearBoton("Adjuntar Captura", new java.awt.Color(0, 102, 153));
+        btnAdjuntarCaptura.addActionListener(e -> adjuntarCaptura());
 
         JPanel panelBusqueda = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 5));
         panelBusqueda.setBackground(Tema.FONDO);
@@ -171,7 +170,7 @@ public class frmTableErrores extends javax.swing.JFrame {
         panelBusqueda.add(cboFiltroFase);
         panelBusqueda.add(btnBuscar);
         panelBusqueda.add(btnVerCaptura);
-        panelBusqueda.add(btnExportarCSV);
+        panelBusqueda.add(btnAdjuntarCaptura);
         getContentPane().add(panelBusqueda, BorderLayout.NORTH);
     }
 
@@ -427,32 +426,34 @@ public class frmTableErrores extends javax.swing.JFrame {
         dialogo.setVisible(true);
     }
 
-    private void exportarCSV() {
-        try {
-            List<ErrorTicket> errores = gestor.obtenerTodosErrores();
-            if (errores.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "No hay errores para exportar");
-                return;
-            }
+    /**
+     * Permite adjuntar o cambiar la captura de pantalla de un error seleccionado.
+     */
+    private void adjuntarCaptura() {
+        int filaVista = jTable1.getSelectedRow();
+        if (filaVista < 0) {
+            JOptionPane.showMessageDialog(this, "Seleccione un error de la tabla");
+            return;
+        }
 
-            JFileChooser fc = new JFileChooser();
-            fc.setDialogTitle("Guardar reporte CSV");
-            fc.setFileFilter(new FileNameExtensionFilter("Archivo CSV (*.csv)", "csv"));
-            fc.setSelectedFile(new File("reporte_errores.csv"));
+        int filaModelo = jTable1.convertRowIndexToModel(filaVista);
+        int id = (int) modeloTabla.getValueAt(filaModelo, 0);
 
-            if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
-                File archivo = fc.getSelectedFile();
-                if (!archivo.getName().endsWith(".csv")) {
-                    archivo = new File(archivo.getAbsolutePath() + ".csv");
-                }
-                ExportadorCSV.exportar(errores, archivo);
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle("Seleccionar captura de pantalla");
+        fc.setFileFilter(new FileNameExtensionFilter("Imagenes (PNG, JPG, GIF)", "png", "jpg", "jpeg", "gif"));
+
+        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File archivoSeleccionado = fc.getSelectedFile();
+            try {
+                String rutaCaptura = ImagenCaptura.copiarImagen(archivoSeleccionado);
+                gestor.adjuntarCaptura(id, rutaCaptura);
+                JOptionPane.showMessageDialog(this, "Captura adjuntada correctamente al error #" + id);
+                cargarTabla();
+            } catch (java.io.IOException ioEx) {
                 JOptionPane.showMessageDialog(this,
-                    "Reporte exportado exitosamente:\n" + archivo.getAbsolutePath());
+                    "Error al adjuntar captura: " + ioEx.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
-        } catch (Exception ex) {
-            logger.warning("Error al exportar: " + ex.getMessage());
-            JOptionPane.showMessageDialog(this,
-                "Error al exportar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -485,147 +486,122 @@ public class frmTableErrores extends javax.swing.JFrame {
     // ==================== GENERATED CODE ====================
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-
-        jPanel1 = new javax.swing.JPanel();
-        jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
-        jLabel1 = new javax.swing.JLabel();
         cboFase = new javax.swing.JComboBox<>();
-        jLabel2 = new javax.swing.JLabel();
-        lblSolucion = new javax.swing.JLabel();
-        jScrollPane2 = new javax.swing.JScrollPane();
         txtSolucion = new javax.swing.JTextArea();
-        btnSalir = new javax.swing.JButton();
-        btnGuardar = new javax.swing.JButton();
-        btnEliminar = new javax.swing.JButton();
-        btnRegresarPrin = new javax.swing.JButton();
-        jPanel2 = new javax.swing.JPanel();
+        lblSolucion = new javax.swing.JLabel();
         jPanel4 = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Gestion de Errores");
+        getContentPane().setBackground(Tema.FONDO);
+        getContentPane().setLayout(new BorderLayout(0, 0));
 
-        jPanel1.setBackground(Tema.FONDO);
+        // === HEADER ===
+        JPanel panelHeader = new JPanel(new BorderLayout());
+        panelHeader.setBackground(Tema.PRIMARIO);
+        panelHeader.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
+        JLabel lblTitulo = new JLabel("Gestion de Errores");
+        lblTitulo.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 22));
+        lblTitulo.setForeground(Tema.TEXTO_CLARO);
+        panelHeader.add(lblTitulo, BorderLayout.WEST);
+        // Indicador de usuario en header
+        String usr = Modelo.SesionUsuario.getInstancia().getUsername();
+        JLabel lblUsr = new JLabel("Usuario: " + (usr != null ? usr : "---"));
+        lblUsr.setFont(Tema.FUENTE_STATUS);
+        lblUsr.setForeground(new java.awt.Color(180, 200, 255));
+        panelHeader.add(lblUsr, BorderLayout.EAST);
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {{null, null, null, null}},
-            new String [] {"Title 1", "Title 2", "Title 3", "Title 4"}
+        // === TABLA ===
+        jScrollPane1 = new JScrollPane(jTable1);
+        jScrollPane1.setBorder(BorderFactory.createEmptyBorder());
+
+        // === PANEL EDICION (fase + solucion) ===
+        JPanel panelEdicion = new JPanel(new java.awt.GridBagLayout());
+        panelEdicion.setBackground(Tema.FONDO);
+        panelEdicion.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(1, 0, 0, 0, new java.awt.Color(200, 200, 210)),
+            BorderFactory.createEmptyBorder(12, 16, 8, 16)
         ));
-        jScrollPane1.setViewportView(jTable1);
 
+        java.awt.GridBagConstraints gbc = new java.awt.GridBagConstraints();
+        gbc.insets = new java.awt.Insets(4, 6, 4, 6);
+        gbc.anchor = java.awt.GridBagConstraints.WEST;
+
+        // Fase
+        JLabel jLabel1 = new JLabel("Fase:");
         jLabel1.setFont(Tema.FUENTE_SUBTITULO);
-        jLabel1.setText("Fase");
+        gbc.gridx = 0; gbc.gridy = 0;
+        panelEdicion.add(jLabel1, gbc);
 
-        cboFase.setFont(Tema.FUENTE_BOTON);
+        cboFase.setFont(Tema.FUENTE_CAMPO);
         cboFase.setModel(new javax.swing.DefaultComboBoxModel<>(Fase.getEtiquetas()));
+        gbc.gridx = 1; gbc.gridy = 0;
+        panelEdicion.add(cboFase, gbc);
 
-        jLabel2.setFont(Tema.FUENTE_TITULO);
-        jLabel2.setText("Errores");
-
+        // Solucion
         lblSolucion.setFont(Tema.FUENTE_SUBTITULO);
-        lblSolucion.setText("Solucion");
+        lblSolucion.setText("Solucion:");
+        gbc.gridx = 2; gbc.gridy = 0;
+        gbc.insets = new java.awt.Insets(4, 30, 4, 6);
+        panelEdicion.add(lblSolucion, gbc);
 
-        txtSolucion.setColumns(20);
-        txtSolucion.setRows(5);
-        jScrollPane2.setViewportView(txtSolucion);
+        txtSolucion.setColumns(40);
+        txtSolucion.setRows(4);
+        txtSolucion.setLineWrap(true);
+        txtSolucion.setWrapStyleWord(true);
+        txtSolucion.setFont(Tema.FUENTE_CAMPO);
+        jScrollPane2 = new JScrollPane(txtSolucion);
+        gbc.gridx = 3; gbc.gridy = 0; gbc.gridheight = 2;
+        gbc.fill = java.awt.GridBagConstraints.BOTH;
+        gbc.weightx = 1.0; gbc.weighty = 1.0;
+        gbc.insets = new java.awt.Insets(4, 6, 4, 6);
+        panelEdicion.add(jScrollPane2, gbc);
 
-        btnSalir.setBackground(Tema.PELIGRO);
-        btnSalir.setFont(Tema.FUENTE_BOTON);
-        btnSalir.setForeground(Tema.TEXTO_CLARO);
-        btnSalir.setText("Salir");
+        // === BOTONES ===
+        JPanel panelBotones = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 12, 8));
+        panelBotones.setBackground(Tema.FONDO);
+        panelBotones.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new java.awt.Color(200, 200, 210)));
+
+        btnGuardar = crearBoton("Guardar", Tema.PRIMARIO);
+        btnGuardar.addActionListener(this::btnGuardarActionPerformed);
+        btnEliminar = crearBoton("Eliminar", new java.awt.Color(153, 0, 0));
+        btnEliminar.addActionListener(e -> eliminarError());
+        btnRegresarPrin = crearBoton("Regresar", new java.awt.Color(100, 100, 120));
+        btnRegresarPrin.addActionListener(this::btnRegresarPrinActionPerformed);
+        btnSalir = crearBoton("Salir", Tema.PELIGRO);
         btnSalir.addActionListener(this::btnSalirActionPerformed);
 
-        btnGuardar.setBackground(Tema.PRIMARIO);
-        btnGuardar.setFont(Tema.FUENTE_BOTON);
-        btnGuardar.setForeground(Tema.TEXTO_CLARO);
-        btnGuardar.setText("Guardar");
-        btnGuardar.addActionListener(this::btnGuardarActionPerformed);
+        panelBotones.add(btnGuardar);
+        panelBotones.add(btnEliminar);
+        panelBotones.add(btnRegresarPrin);
+        panelBotones.add(btnSalir);
 
-        btnEliminar.setBackground(new java.awt.Color(153, 0, 0));
-        btnEliminar.setFont(Tema.FUENTE_BOTON);
-        btnEliminar.setForeground(Tema.TEXTO_CLARO);
-        btnEliminar.setText("Eliminar");
-        btnEliminar.addActionListener(e -> eliminarError());
-
-        btnRegresarPrin.setBackground(Tema.PELIGRO);
-        btnRegresarPrin.setFont(Tema.FUENTE_BOTON);
-        btnRegresarPrin.setForeground(Tema.TEXTO_CLARO);
-        btnRegresarPrin.setText("Regresar");
-        btnRegresarPrin.addActionListener(this::btnRegresarPrinActionPerformed);
-
-        jPanel2.setBackground(Tema.PRIMARIO);
-        jPanel2.setPreferredSize(new java.awt.Dimension(0, 25));
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 0, Short.MAX_VALUE));
-        jPanel2Layout.setVerticalGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 25, Short.MAX_VALUE));
-
+        // === BARRA ESTADO ===
+        jPanel4 = new JPanel(new BorderLayout());
         jPanel4.setBackground(Tema.PRIMARIO);
         jPanel4.setPreferredSize(new java.awt.Dimension(0, 28));
-        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 0, Short.MAX_VALUE));
-        jPanel4Layout.setVerticalGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 28, Short.MAX_VALUE));
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 750, Short.MAX_VALUE)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(34, 34, 34)
-                .addComponent(btnGuardar).addGap(18, 18, 18)
-                .addComponent(btnEliminar).addGap(18, 18, 18)
-                .addComponent(btnRegresarPrin)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(btnSalir).addGap(19, 19, 19))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE).addComponent(jLabel2).addGap(340, 340, 340))
-            .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, 750, Short.MAX_VALUE)
-            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 750, Short.MAX_VALUE)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(14, 14, 14)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup().addGap(30, 30, 30).addComponent(jLabel1))
-                    .addComponent(cboFase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(55, 55, 55)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblSolucion))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(7, 7, 7).addComponent(jLabel2)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1).addComponent(lblSolucion))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(cboFase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 50, Short.MAX_VALUE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnRegresarPrin).addComponent(btnGuardar)
-                    .addComponent(btnEliminar).addComponent(btnSalir))
-                .addGap(20, 20, 20)
-                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-        );
+        // === PANEL CENTRAL (tabla + edicion + botones) ===
+        jPanel1 = new JPanel(new BorderLayout(0, 0));
+        jPanel1.setBackground(Tema.FONDO);
+        jPanel1.add(jScrollPane1, BorderLayout.CENTER);
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
-        layout.setVerticalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
+        JPanel panelInferior = new JPanel(new BorderLayout());
+        panelInferior.setBackground(Tema.FONDO);
+        panelInferior.add(panelEdicion, BorderLayout.CENTER);
+        panelInferior.add(panelBotones, BorderLayout.SOUTH);
+        jPanel1.add(panelInferior, BorderLayout.SOUTH);
 
-        pack();
-    }// </editor-fold>//GEN-END:initComponents
+        // === ENSAMBLAR ===
+        getContentPane().add(panelHeader, BorderLayout.NORTH);
+        getContentPane().add(jPanel1, BorderLayout.CENTER);
+        getContentPane().add(jPanel4, BorderLayout.SOUTH);
+
+        setSize(850, 620);
+        setLocationRelativeTo(null);
+    }
 
     private void btnSalirActionPerformed(java.awt.event.ActionEvent evt) {
         int confirmacion = JOptionPane.showConfirmDialog(this,

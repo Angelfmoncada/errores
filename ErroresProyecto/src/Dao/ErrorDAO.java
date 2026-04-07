@@ -223,6 +223,21 @@ public class ErrorDAO {
     }
 
     /**
+     * Actualiza la captura de pantalla de un error existente.
+     */
+    public void actualizarCaptura(int id, String rutaCaptura) {
+        String sql = "UPDATE errores SET captura_error = ? WHERE id = ?";
+        try (Connection con = ConexionBD.conectar();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, rutaCaptura);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            throw new ErrorDaoException("Error al actualizar captura: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
      * Elimina un error de la base de datos por su ID.
      */
     public void eliminar(int id) {

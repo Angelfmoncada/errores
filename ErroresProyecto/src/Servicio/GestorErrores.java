@@ -110,6 +110,13 @@ public class GestorErrores {
         return errorDAO.buscarResueltos(titulo, severidad, resueltoPor, desde, hasta);
     }
 
+    /**
+     * Adjunta o actualiza la captura de pantalla de un error.
+     */
+    public void adjuntarCaptura(int id, String rutaCaptura) {
+        errorDAO.actualizarCaptura(id, rutaCaptura);
+    }
+
     public void eliminarError(int id) {
         errorDAO.eliminar(id);
     }

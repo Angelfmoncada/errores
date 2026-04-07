@@ -27,41 +27,67 @@ public class FrmPrincipal extends javax.swing.JFrame {
     }
 
     private void agregarBotonesExtra() {
+        // Crear botones Dashboard y Errores Resueltos con mismo estilo
         javax.swing.JButton btnDashboard = new javax.swing.JButton("Dashboard");
-        btnDashboard.setFont(new java.awt.Font("Trebuchet MS", java.awt.Font.BOLD, 12));
+        btnDashboard.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
         btnDashboard.setBackground(new java.awt.Color(41, 128, 185));
         btnDashboard.setForeground(java.awt.Color.WHITE);
+        btnDashboard.setPreferredSize(new java.awt.Dimension(160, 35));
         btnDashboard.addActionListener(e -> {
             new FrmDashboard().setVisible(true);
             this.dispose();
         });
 
         javax.swing.JButton btnResueltos = new javax.swing.JButton("Errores Resueltos");
-        btnResueltos.setFont(new java.awt.Font("Trebuchet MS", java.awt.Font.BOLD, 12));
-        btnResueltos.setBackground(new java.awt.Color(46, 204, 113));
+        btnResueltos.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        btnResueltos.setBackground(new java.awt.Color(41, 128, 185));
         btnResueltos.setForeground(java.awt.Color.WHITE);
+        btnResueltos.setPreferredSize(new java.awt.Dimension(160, 35));
         btnResueltos.addActionListener(e -> {
             new FrmErroresResueltos().setVisible(true);
             this.dispose();
         });
 
-        // Agregar al panel lateral
-        javax.swing.JPanel panelNuevosBotones = new javax.swing.JPanel();
-        panelNuevosBotones.setLayout(new javax.swing.BoxLayout(panelNuevosBotones, javax.swing.BoxLayout.Y_AXIS));
-        panelNuevosBotones.setBackground(new java.awt.Color(0, 0, 102));
-        panelNuevosBotones.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        // Panel central con BoxLayout vertical para centrar todo
+        javax.swing.JPanel panelCentral = new javax.swing.JPanel();
+        panelCentral.setLayout(new javax.swing.BoxLayout(panelCentral, javax.swing.BoxLayout.Y_AXIS));
+        panelCentral.setBackground(new java.awt.Color(0, 0, 102));
+        panelCentral.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 40, 0, 40));
 
-        btnDashboard.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
-        btnResueltos.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
-        btnDashboard.setMaximumSize(new java.awt.Dimension(160, 31));
-        btnResueltos.setMaximumSize(new java.awt.Dimension(160, 31));
+        // Titulo centrado
+        javax.swing.JLabel lblTitulo = new javax.swing.JLabel("Gestor de Errores");
+        lblTitulo.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 26));
+        lblTitulo.setForeground(java.awt.Color.WHITE);
+        lblTitulo.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
 
-        panelNuevosBotones.add(btnDashboard);
-        panelNuevosBotones.add(javax.swing.Box.createVerticalStrut(10));
-        panelNuevosBotones.add(btnResueltos);
+        // Configurar todos los botones con mismo tamano y centrado
+        javax.swing.JButton[] botones = {btnRegistrarError1, btnErrores1, btnDashboard, btnResueltos, btnSalir};
+        java.awt.Dimension tamBoton = new java.awt.Dimension(220, 38);
+        for (javax.swing.JButton btn : botones) {
+            btn.setMaximumSize(tamBoton);
+            btn.setPreferredSize(tamBoton);
+            btn.setAlignmentX(java.awt.Component.CENTER_ALIGNMENT);
+        }
 
-        getContentPane().add(panelNuevosBotones, java.awt.BorderLayout.EAST);
-        pack();
+        // Armar el panel
+        panelCentral.add(javax.swing.Box.createVerticalGlue());
+        panelCentral.add(lblTitulo);
+        panelCentral.add(javax.swing.Box.createVerticalStrut(30));
+        for (javax.swing.JButton btn : botones) {
+            panelCentral.add(btn);
+            panelCentral.add(javax.swing.Box.createVerticalStrut(10));
+        }
+        panelCentral.add(javax.swing.Box.createVerticalGlue());
+
+        // Reemplazar contenido
+        jPanel1.removeAll();
+        jPanel1.setLayout(new java.awt.BorderLayout());
+        jPanel1.add(panelCentral, java.awt.BorderLayout.CENTER);
+
+        jPanel1.revalidate();
+        jPanel1.repaint();
+        setSize(420, 420);
+        setLocationRelativeTo(null);
     }
 
 
@@ -92,65 +118,29 @@ public class FrmPrincipal extends javax.swing.JFrame {
             .addGap(0, 411, Short.MAX_VALUE)
         );
 
-        btnSalir.setBackground(new java.awt.Color(255, 0, 0));
-        btnSalir.setFont(new java.awt.Font("Arial Black", 2, 12));
-        btnSalir.setForeground(new java.awt.Color(255, 255, 255));
+        btnSalir.setBackground(new java.awt.Color(41, 128, 185));
+        btnSalir.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        btnSalir.setForeground(java.awt.Color.WHITE);
         btnSalir.setText("Salir");
         btnSalir.addActionListener(this::btnSalirActionPerformed);
 
-        btnErrores1.setFont(btnErrores1.getFont().deriveFont(btnErrores1.getFont().getStyle() | java.awt.Font.BOLD));
-        btnErrores1.setText("Ver Errores");
+        btnErrores1.setBackground(new java.awt.Color(41, 128, 185));
+        btnErrores1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        btnErrores1.setForeground(java.awt.Color.WHITE);
+        btnErrores1.setText("Gestion de Errores");
         btnErrores1.addActionListener(this::btnErrores1ActionPerformed);
 
-        btnRegistrarError1.setFont(new java.awt.Font("Trebuchet MS", 1, 12));
-        btnRegistrarError1.setText("Registrar Error");
+        btnRegistrarError1.setBackground(new java.awt.Color(41, 128, 185));
+        btnRegistrarError1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        btnRegistrarError1.setForeground(java.awt.Color.WHITE);
+        btnRegistrarError1.setText("Nuevo Error");
         btnRegistrarError1.addActionListener(this::btnRegistrarError1ActionPerformed);
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(lblFondoRegistrar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(btnSalir, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(btnRegistrarError1, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnErrores1, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addContainerGap(198, Short.MAX_VALUE))))
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(lblFondoRegistrar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(btnRegistrarError1, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(28, 28, 28)
-                .addComponent(btnErrores1, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(28, 28, 28)
-                .addComponent(btnSalir, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(127, 127, 127))
-        );
+        // Layout simple - sera reemplazado por agregarBotonesExtra()
+        jPanel1.setLayout(new java.awt.BorderLayout());
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-
-        pack();
+        getContentPane().setLayout(new java.awt.BorderLayout());
+        getContentPane().add(jPanel1, java.awt.BorderLayout.CENTER);
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalirActionPerformed
