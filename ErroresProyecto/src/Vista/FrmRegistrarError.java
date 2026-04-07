@@ -30,12 +30,48 @@ public class FrmRegistrarError extends javax.swing.JFrame {
     private javax.swing.JLabel lblCaptura;
     private javax.swing.JLabel lblPreviewCaptura;
     private javax.swing.JTextArea txtPasosReproducir;
+    private javax.swing.JLabel lblContadorTitulo;
 
     public FrmRegistrarError() {
         initComponents();
         Utilidades.Icono.setLogotipo(this);
         this.setLocationRelativeTo(null);
+        agregarContadorCaracteres();
         agregarComponentesExtra();
+    }
+
+    /**
+     * Agrega un contador de caracteres en tiempo real debajo del campo titulo.
+     * Muestra "X/100" y cambia a rojo cuando se acerca al limite.
+     */
+    private void agregarContadorCaracteres() {
+        lblContadorTitulo = new javax.swing.JLabel("0/100");
+        lblContadorTitulo.setFont(Tema.FUENTE_STATUS);
+        lblContadorTitulo.setForeground(Tema.EXITO);
+
+        txtTitulo.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            private void actualizar() {
+                int len = txtTitulo.getText().length();
+                lblContadorTitulo.setText(len + "/100");
+                if (len > 100) {
+                    lblContadorTitulo.setForeground(Tema.BORDE_ERROR);
+                } else if (len > 80) {
+                    lblContadorTitulo.setForeground(new java.awt.Color(230, 126, 34));
+                } else {
+                    lblContadorTitulo.setForeground(Tema.EXITO);
+                }
+            }
+            @Override public void insertUpdate(javax.swing.event.DocumentEvent e) { actualizar(); }
+            @Override public void removeUpdate(javax.swing.event.DocumentEvent e) { actualizar(); }
+            @Override public void changedUpdate(javax.swing.event.DocumentEvent e) { actualizar(); }
+        });
+
+        // Colocar debajo del campo titulo
+        javax.swing.JPanel panelContador = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT, 5, 0));
+        panelContador.setBackground(Tema.FONDO);
+        panelContador.add(lblContadorTitulo);
+        // Insertar en el panel principal justo debajo del titulo
+        jPanel1.add(panelContador);
     }
 
     private void agregarComponentesExtra() {

@@ -12,6 +12,8 @@ CREATE TABLE errores (
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     captura_error TEXT,
     pasos_reproducir TEXT,
+    registrado_por VARCHAR(100),
+    proceso_por VARCHAR(100),
     resuelto_por VARCHAR(100),
     fecha_solucion TIMESTAMP NULL,
     descripcion_solucion TEXT,

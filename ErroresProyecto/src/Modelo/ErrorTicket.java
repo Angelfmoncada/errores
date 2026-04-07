@@ -67,10 +67,28 @@ public class ErrorTicket {
         this.solucion = solucion;
     }
 
-    // --- Tracking de resolución ---
+    // --- Tracking de responsables por fase ---
 
+    private String registradoPor;
+    private String procesoPor;
     private String resueltoPor;
     private Timestamp fechaSolucion;
+
+    public String getRegistradoPor() {
+        return registradoPor;
+    }
+
+    public void setRegistradoPor(String registradoPor) {
+        this.registradoPor = registradoPor;
+    }
+
+    public String getProcesoPor() {
+        return procesoPor;
+    }
+
+    public void setProcesoPor(String procesoPor) {
+        this.procesoPor = procesoPor;
+    }
 
     public String getResueltoPor() {
         return resueltoPor;

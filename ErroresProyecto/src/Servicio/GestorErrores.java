@@ -10,8 +10,10 @@ import java.util.List;
 
 /**
  * Clase de servicio que gestiona los errores.
- * Hace de intermediario entre la GUI y la capa de datos,
- * aplicando logica de negocio antes de las operaciones.
+ * Registra automaticamente quien realizo cada cambio de fase:
+ * - registrado_por: usuario que creo el error
+ * - proceso_por: usuario que movio el error a PROCESO
+ * - resuelto_por: usuario que movio el error a SOLUCIONADO
  */
 public class GestorErrores {
 
@@ -21,62 +23,93 @@ public class GestorErrores {
         this.errorDAO = new ErrorDAO();
     }
 
-    /**
-     * Registra un nuevo error en la base de datos.
-     */
-    public void registrarError(ErrorTicket e) {
-        errorDAO.insertar(e);
+    private String getUsuarioActual() {
+        return SesionUsuario.getInstancia().getUsername();
     }
 
     /**
-     * Busca un error por su ID.
-     * @return el ErrorTicket encontrado o null si no existe
+     * Registra un nuevo error. Asigna automaticamente el usuario actual como registrado_por.
      */
+    public void registrarError(ErrorTicket e) {
+        e.setRegistradoPor(getUsuarioActual());
+        errorDAO.insertar(e);
+    }
+
     public ErrorTicket buscarPorId(int id) {
         return errorDAO.buscarPorId(id);
     }
 
-    /**
-     * Devuelve una lista con todos los errores registrados.
-     */
     public List<ErrorTicket> obtenerTodosErrores() {
         return errorDAO.obtenerTodos();
     }
 
     /**
-     * Actualiza un error existente en la base de datos.
-     * Si la fase es SOLUCIONADO, registra automaticamente quien lo resolvio y cuando.
-     * Si se revierte a una fase anterior, limpia los datos de resolucion.
+     * Actualiza un error. Asigna automaticamente el responsable segun la fase:
+     * - PROCESO: asigna proceso_por al usuario actual
+     * - SOLUCIONADO: asigna resuelto_por y fecha_solucion
+     * - REGISTRADO: limpia proceso_por, resuelto_por y fecha_solucion
      */
     public void actualizarError(ErrorTicket e) {
-        if (e.getFase() == Fase.SOLUCIONADO && e.getResueltoPor() == null) {
-            e.setResueltoPor(SesionUsuario.getInstancia().getUsername());
-            e.setFechaSolucion(new Timestamp(System.currentTimeMillis()));
-        } else if (e.getFase() != Fase.SOLUCIONADO && e.getFase() != Fase.CERRADO) {
-            e.setResueltoPor(null);
-            e.setFechaSolucion(null);
+        String usuario = getUsuarioActual();
+
+        // Obtener el estado previo para preservar datos existentes
+        ErrorTicket previo = errorDAO.buscarPorId(e.getId());
+
+        switch (e.getFase()) {
+            case PROCESO:
+                // Preservar quien lo registro
+                if (previo != null) {
+                    e.setRegistradoPor(previo.getRegistradoPor());
+                }
+                e.setProcesoPor(usuario);
+                e.setResueltoPor(null);
+                e.setFechaSolucion(null);
+                break;
+
+            case SOLUCIONADO:
+                if (previo != null) {
+                    e.setRegistradoPor(previo.getRegistradoPor());
+                    e.setProcesoPor(previo.getProcesoPor());
+                }
+                if (e.getResueltoPor() == null) {
+                    e.setResueltoPor(usuario);
+                    e.setFechaSolucion(new Timestamp(System.currentTimeMillis()));
+                }
+                break;
+
+            case CERRADO:
+                if (previo != null) {
+                    e.setRegistradoPor(previo.getRegistradoPor());
+                    e.setProcesoPor(previo.getProcesoPor());
+                    if (e.getResueltoPor() == null) {
+                        e.setResueltoPor(previo.getResueltoPor());
+                        e.setFechaSolucion(previo.getFechaSolucion());
+                    }
+                }
+                break;
+
+            default: // REGISTRADO
+                if (previo != null) {
+                    e.setRegistradoPor(previo.getRegistradoPor());
+                }
+                e.setProcesoPor(null);
+                e.setResueltoPor(null);
+                e.setFechaSolucion(null);
+                break;
         }
+
         errorDAO.actualizar(e);
     }
 
-    /**
-     * Busca errores por titulo y/o fase.
-     */
     public List<ErrorTicket> buscarErrores(String titulo, String fase) {
         return errorDAO.buscar(titulo, fase);
     }
 
-    /**
-     * Busca errores resueltos con filtros avanzados.
-     */
     public List<ErrorTicket> buscarResueltos(String titulo, String severidad,
                                               String resueltoPor, Timestamp desde, Timestamp hasta) {
         return errorDAO.buscarResueltos(titulo, severidad, resueltoPor, desde, hasta);
     }
 
-    /**
-     * Elimina un error de la base de datos por su ID.
-     */
     public void eliminarError(int id) {
         errorDAO.eliminar(id);
     }

@@ -18,7 +18,7 @@ public class ErrorDAO {
 
     private static final String COLUMNAS_SELECT =
         "id, titulo, descripcion, severidad, fase, fecha, solucion, " +
-        "resuelto_por, fecha_solucion, captura_error, pasos_reproducir, descripcion_solucion";
+        "registrado_por, proceso_por, resuelto_por, fecha_solucion, captura_error, pasos_reproducir, descripcion_solucion";
 
     /**
      * Mapea una fila del ResultSet a un objeto ErrorTicket.
@@ -34,6 +34,8 @@ public class ErrorDAO {
         e.setId(rs.getInt("id"));
         e.setFecha(rs.getTimestamp("fecha"));
         e.setSolucion(rs.getString("solucion"));
+        e.setRegistradoPor(rs.getString("registrado_por"));
+        e.setProcesoPor(rs.getString("proceso_por"));
         e.setResueltoPor(rs.getString("resuelto_por"));
         e.setFechaSolucion(rs.getTimestamp("fecha_solucion"));
         e.setCapturaError(rs.getString("captura_error"));
@@ -76,8 +78,8 @@ public class ErrorDAO {
      * Inserta un nuevo error en la base de datos.
      */
     public void insertar(ErrorTicket e) {
-        String sql = "INSERT INTO errores (titulo, descripcion, severidad, fase, solucion, captura_error, pasos_reproducir) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO errores (titulo, descripcion, severidad, fase, solucion, captura_error, pasos_reproducir, registrado_por) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection con = ConexionBD.conectar();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
@@ -88,6 +90,7 @@ public class ErrorDAO {
             ps.setString(5, e.getSolucion());
             ps.setString(6, e.getCapturaError());
             ps.setString(7, e.getPasosReproducir());
+            ps.setString(8, e.getRegistradoPor());
             ps.executeUpdate();
 
         } catch (SQLException ex) {
@@ -117,7 +120,7 @@ public class ErrorDAO {
      * Actualiza un error existente (fase y solucion).
      */
     public void actualizar(ErrorTicket e) {
-        String sql = "UPDATE errores SET fase = ?, solucion = ?, resuelto_por = ?, " +
+        String sql = "UPDATE errores SET fase = ?, solucion = ?, proceso_por = ?, resuelto_por = ?, " +
                      "fecha_solucion = ?, descripcion_solucion = ? WHERE id = ?";
 
         try (Connection con = ConexionBD.conectar();
@@ -125,10 +128,11 @@ public class ErrorDAO {
 
             ps.setString(1, e.getFase().name());
             ps.setString(2, e.getSolucion());
-            ps.setString(3, e.getResueltoPor());
-            ps.setTimestamp(4, e.getFechaSolucion());
-            ps.setString(5, e.getDescripcionSolucion());
-            ps.setInt(6, e.getId());
+            ps.setString(3, e.getProcesoPor());
+            ps.setString(4, e.getResueltoPor());
+            ps.setTimestamp(5, e.getFechaSolucion());
+            ps.setString(6, e.getDescripcionSolucion());
+            ps.setInt(7, e.getId());
             ps.executeUpdate();
 
         } catch (SQLException ex) {

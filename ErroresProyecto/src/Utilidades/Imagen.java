@@ -1,24 +1,23 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Utilidades;
 
 import java.awt.Image;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
 /**
- *
- * @author Mass
+ * Utilidad para cargar y escalar imagenes en componentes JLabel.
  */
 public class Imagen {
-    
+
+    private static final Logger logger = Logger.getLogger(Imagen.class.getName());
+
     public static void ponerImagenEnLabel(JLabel label, String ruta) {
         java.net.URL recurso = Imagen.class.getResource(ruta);
         if (recurso == null) {
-            System.err.println("No se encontró la imagen: " + ruta);
+            logger.log(Level.WARNING, "No se encontro la imagen: {0}", ruta);
             return;
         }
 
@@ -35,6 +34,4 @@ public class Imagen {
         Icon iconoFinal = new ImageIcon(escalada);
         label.setIcon(iconoFinal);
     }
-    
-    
 }

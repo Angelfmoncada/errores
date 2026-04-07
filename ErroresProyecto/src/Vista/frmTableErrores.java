@@ -2,30 +2,38 @@ package Vista;
 
 import Modelo.ErrorTicket;
 import Modelo.Fase;
+import Modelo.SesionUsuario;
 import Modelo.Severidad;
 import Servicio.GestorErrores;
 import Utilidades.ExportadorCSV;
 import Utilidades.ImagenCaptura;
 import Utilidades.Tema;
 
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.List;
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowSorter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 
 /**
  * Vista principal para consultar, editar y eliminar errores.
- * Incluye busqueda por titulo/fase, exportacion a CSV y vista de capturas.
- *
- * Refactorizado: se elimino duplicacion de codigo usando GestorErrores.buscarPorId(),
- * Fase.fromIndex(), Tema para estilos y ExportadorCSV para exportacion.
+ * Mejoras: colores por severidad, doble clic detalle, ordenamiento por columna,
+ * barra de estado, contador de registros, exportacion CSV.
  */
 public class frmTableErrores extends javax.swing.JFrame {
 
@@ -43,6 +51,10 @@ public class frmTableErrores extends javax.swing.JFrame {
     private javax.swing.JTextArea txtDescSolucion;
     private javax.swing.JScrollPane scrollDescSolucion;
 
+    // Barra de estado
+    private javax.swing.JLabel lblStatusUsuario;
+    private javax.swing.JLabel lblStatusTotal;
+
     public frmTableErrores() {
         initComponents();
         Utilidades.Icono.setLogotipo(this);
@@ -51,25 +63,59 @@ public class frmTableErrores extends javax.swing.JFrame {
         crearPanelDescripcionSolucion();
         configurarEventoFase();
         crearBarraBusqueda();
+        crearBarraEstado();
         configurarTabla();
         cargarTabla();
         agregarEventos();
     }
 
+    // ==================== BARRA DE ESTADO ====================
+
+    private void crearBarraEstado() {
+        JPanel barraEstado = new JPanel(new BorderLayout());
+        barraEstado.setBackground(Tema.PRIMARIO);
+        barraEstado.setBorder(BorderFactory.createEmptyBorder(4, 10, 4, 10));
+
+        String usuario = SesionUsuario.getInstancia().getUsername();
+        lblStatusUsuario = new JLabel("  Usuario: " + (usuario != null ? usuario : "---"));
+        lblStatusUsuario.setFont(Tema.FUENTE_STATUS);
+        lblStatusUsuario.setForeground(Tema.TEXTO_CLARO);
+
+        lblStatusTotal = new JLabel("Total: 0 errores  ");
+        lblStatusTotal.setFont(Tema.FUENTE_STATUS);
+        lblStatusTotal.setForeground(Tema.TEXTO_CLARO);
+        lblStatusTotal.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+
+        barraEstado.add(lblStatusUsuario, BorderLayout.WEST);
+        barraEstado.add(lblStatusTotal, BorderLayout.EAST);
+
+        // Reemplazar jPanel4 (barra inferior) con la barra de estado
+        jPanel4.setLayout(new BorderLayout());
+        jPanel4.removeAll();
+        jPanel4.add(barraEstado, BorderLayout.CENTER);
+        jPanel4.revalidate();
+    }
+
+    private void actualizarBarraEstado(int total) {
+        lblStatusTotal.setText("Total: " + total + " error" + (total != 1 ? "es" : "") + "  ");
+    }
+
+    // ==================== PANEL DESCRIPCION SOLUCION ====================
+
     private void crearPanelDescripcionSolucion() {
-        lblDescSolucion = new javax.swing.JLabel("Descripcion de la Solucion:");
+        lblDescSolucion = new JLabel("Descripcion de la Solucion:");
         lblDescSolucion.setFont(Tema.FUENTE_SUBTITULO);
-        txtDescSolucion = new javax.swing.JTextArea(3, 20);
+        txtDescSolucion = new JTextArea(3, 20);
         txtDescSolucion.setLineWrap(true);
         txtDescSolucion.setWrapStyleWord(true);
-        scrollDescSolucion = new javax.swing.JScrollPane(txtDescSolucion);
+        scrollDescSolucion = new JScrollPane(txtDescSolucion);
 
-        javax.swing.JPanel panelDescSol = new javax.swing.JPanel(new java.awt.BorderLayout(5, 5));
+        JPanel panelDescSol = new JPanel(new BorderLayout(5, 5));
         panelDescSol.setBackground(Tema.FONDO);
-        panelDescSol.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 14, 5, 14));
-        panelDescSol.add(lblDescSolucion, java.awt.BorderLayout.NORTH);
-        panelDescSol.add(scrollDescSolucion, java.awt.BorderLayout.CENTER);
-        getContentPane().add(panelDescSol, java.awt.BorderLayout.SOUTH);
+        panelDescSol.setBorder(BorderFactory.createEmptyBorder(5, 14, 5, 14));
+        panelDescSol.add(lblDescSolucion, BorderLayout.NORTH);
+        panelDescSol.add(scrollDescSolucion, BorderLayout.CENTER);
+        getContentPane().add(panelDescSol, BorderLayout.SOUTH);
     }
 
     private void configurarEventoFase() {
@@ -93,6 +139,8 @@ public class frmTableErrores extends javax.swing.JFrame {
         scrollDescSolucion.setVisible(false);
     }
 
+    // ==================== BARRA BUSQUEDA ====================
+
     private void crearBarraBusqueda() {
         txtBuscar = new javax.swing.JTextField(15);
         txtBuscar.setFont(Tema.FUENTE_CAMPO);
@@ -115,16 +163,16 @@ public class frmTableErrores extends javax.swing.JFrame {
         btnExportarCSV = crearBoton("Exportar CSV", Tema.PRIMARIO_CLARO);
         btnExportarCSV.addActionListener(e -> exportarCSV());
 
-        javax.swing.JPanel panelBusqueda = new javax.swing.JPanel();
+        JPanel panelBusqueda = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 5));
         panelBusqueda.setBackground(Tema.FONDO);
-        panelBusqueda.add(new javax.swing.JLabel("Buscar:"));
+        panelBusqueda.add(new JLabel("Buscar:"));
         panelBusqueda.add(txtBuscar);
-        panelBusqueda.add(new javax.swing.JLabel("Fase:"));
+        panelBusqueda.add(new JLabel("Fase:"));
         panelBusqueda.add(cboFiltroFase);
         panelBusqueda.add(btnBuscar);
         panelBusqueda.add(btnVerCaptura);
         panelBusqueda.add(btnExportarCSV);
-        getContentPane().add(panelBusqueda, java.awt.BorderLayout.NORTH);
+        getContentPane().add(panelBusqueda, BorderLayout.NORTH);
     }
 
     private javax.swing.JButton crearBoton(String texto, java.awt.Color fondo) {
@@ -135,10 +183,12 @@ public class frmTableErrores extends javax.swing.JFrame {
         return btn;
     }
 
+    // ==================== TABLA ====================
+
     private void configurarTabla() {
         modeloTabla = new DefaultTableModel(
-            new Object[]{"ID", "Titulo", "Descripcion", "Severidad", "Fase", "Fecha",
-                         "Solucion", "Resuelto Por", "Fecha Solucion"}, 0
+            new Object[]{"ID", "Titulo", "Severidad", "Fase", "Fecha",
+                         "Registrado Por", "En Proceso Por", "Resuelto Por", "Fecha Solucion"}, 0
         ) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -150,9 +200,14 @@ public class frmTableErrores extends javax.swing.JFrame {
         jTable1.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         jTable1.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
 
-        Tema.aplicarEstiloTabla(jTable1);
+        // Colores por severidad (columna 2)
+        Tema.aplicarEstiloTabla(jTable1, 2);
 
-        int[] anchos = {45, 150, 210, 95, 115, 130, 170, 115, 140};
+        // Ordenamiento por columna al hacer clic en header
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(modeloTabla);
+        jTable1.setRowSorter(sorter);
+
+        int[] anchos = {40, 160, 90, 110, 130, 110, 110, 110, 140};
         for (int i = 0; i < anchos.length; i++) {
             jTable1.getColumnModel().getColumn(i).setPreferredWidth(anchos[i]);
         }
@@ -164,7 +219,70 @@ public class frmTableErrores extends javax.swing.JFrame {
                 cargarDatosSeleccion();
             }
         });
+
+        // Doble clic para ver detalle completo
+        jTable1.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    mostrarDetalleError();
+                }
+            }
+        });
     }
+
+    // ==================== DETALLE COMPLETO (doble clic) ====================
+
+    private void mostrarDetalleError() {
+        int filaVista = jTable1.getSelectedRow();
+        if (filaVista < 0) return;
+
+        int filaModelo = jTable1.convertRowIndexToModel(filaVista);
+        int id = (int) modeloTabla.getValueAt(filaModelo, 0);
+        ErrorTicket err = gestor.buscarPorId(id);
+        if (err == null) return;
+
+        StringBuilder detalle = new StringBuilder();
+        detalle.append("ID: ").append(err.getId()).append("\n");
+        detalle.append("Titulo: ").append(err.getTitulo()).append("\n");
+        detalle.append("Severidad: ").append(err.getSeveridad().getEtiqueta()).append("\n");
+        detalle.append("Fase: ").append(err.getFase().getEtiqueta()).append("\n");
+        detalle.append("Fecha: ").append(err.getFecha() != null ? Tema.FORMATO_FECHA_HORA.format(err.getFecha()) : "---").append("\n\n");
+
+        detalle.append("--- Responsables ---\n");
+        detalle.append("Registrado por: ").append(err.getRegistradoPor() != null ? err.getRegistradoPor() : "---").append("\n");
+        detalle.append("En proceso por: ").append(err.getProcesoPor() != null ? err.getProcesoPor() : "---").append("\n");
+        detalle.append("Resuelto por: ").append(err.getResueltoPor() != null ? err.getResueltoPor() : "---").append("\n");
+        if (err.getFechaSolucion() != null) {
+            detalle.append("Fecha solucion: ").append(Tema.FORMATO_FECHA_HORA.format(err.getFechaSolucion())).append("\n");
+        }
+
+        detalle.append("\n--- Descripcion ---\n").append(err.getDescripcion()).append("\n\n");
+
+        if (err.getPasosReproducir() != null && !err.getPasosReproducir().isEmpty()) {
+            detalle.append("--- Pasos para Reproducir ---\n").append(err.getPasosReproducir()).append("\n\n");
+        }
+        if (err.getSolucion() != null && !err.getSolucion().isEmpty()) {
+            detalle.append("--- Solucion ---\n").append(err.getSolucion()).append("\n\n");
+        }
+        if (err.getDescripcionSolucion() != null && !err.getDescripcionSolucion().isEmpty()) {
+            detalle.append("--- Descripcion de Solucion ---\n").append(err.getDescripcionSolucion()).append("\n");
+        }
+
+        JTextArea txtDetalle = new JTextArea(detalle.toString());
+        txtDetalle.setEditable(false);
+        txtDetalle.setFont(Tema.FUENTE_CAMPO);
+        txtDetalle.setLineWrap(true);
+        txtDetalle.setWrapStyleWord(true);
+
+        JDialog dialogo = new JDialog(this, "Detalle del Error #" + err.getId(), true);
+        dialogo.add(new JScrollPane(txtDetalle));
+        dialogo.setSize(550, 450);
+        dialogo.setLocationRelativeTo(this);
+        dialogo.setVisible(true);
+    }
+
+    // ==================== CARGAR / BUSCAR ====================
 
     private void cargarTabla() {
         modeloTabla.setRowCount(0);
@@ -173,7 +291,9 @@ public class frmTableErrores extends javax.swing.JFrame {
             for (ErrorTicket e : errores) {
                 agregarFilaTabla(e);
             }
+            actualizarBarraEstado(errores.size());
         } catch (Exception ex) {
+            logger.warning("Error al cargar datos: " + ex.getMessage());
             JOptionPane.showMessageDialog(this,
                 "Error al cargar datos: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -183,21 +303,23 @@ public class frmTableErrores extends javax.swing.JFrame {
         modeloTabla.addRow(new Object[]{
             e.getId(),
             e.getTitulo(),
-            e.getDescripcion(),
             e.getSeveridad(),
             e.getFase(),
             e.getFecha(),
-            e.getSolucion(),
-            e.getResueltoPor(),
+            e.getRegistradoPor() != null ? e.getRegistradoPor() : "---",
+            e.getProcesoPor() != null ? e.getProcesoPor() : "---",
+            e.getResueltoPor() != null ? e.getResueltoPor() : "---",
             e.getFechaSolucion()
         });
     }
 
     private void cargarDatosSeleccion() {
-        int fila = jTable1.getSelectedRow();
-        if (fila < 0) return;
+        int filaVista = jTable1.getSelectedRow();
+        if (filaVista < 0) return;
 
-        Object faseTabla = jTable1.getValueAt(fila, 4);
+        int filaModelo = jTable1.convertRowIndexToModel(filaVista);
+
+        Object faseTabla = modeloTabla.getValueAt(filaModelo, 3);
         if (faseTabla != null) {
             String faseStr = faseTabla.toString();
             Fase[] fases = Fase.values();
@@ -209,30 +331,31 @@ public class frmTableErrores extends javax.swing.JFrame {
             }
         }
 
-        txtSolucion.setText((String) jTable1.getValueAt(fila, 6));
-
-        int id = (int) jTable1.getValueAt(fila, 0);
+        int id = (int) modeloTabla.getValueAt(filaModelo, 0);
         ErrorTicket err = gestor.buscarPorId(id);
         if (err != null) {
+            txtSolucion.setText(err.getSolucion() != null ? err.getSolucion() : "");
             txtDescSolucion.setText(err.getDescripcionSolucion() != null ? err.getDescripcionSolucion() : "");
         }
     }
 
     private void guardarCambios() {
-        int fila = jTable1.getSelectedRow();
-        if (fila < 0) {
+        int filaVista = jTable1.getSelectedRow();
+        if (filaVista < 0) {
             JOptionPane.showMessageDialog(this, "Seleccione un error de la tabla");
             return;
         }
 
-        int id = (int) jTable1.getValueAt(fila, 0);
-        String titulo = (String) jTable1.getValueAt(fila, 1);
-        String descripcion = (String) jTable1.getValueAt(fila, 2);
-        Severidad sev = (Severidad) jTable1.getValueAt(fila, 3);
+        int filaModelo = jTable1.convertRowIndexToModel(filaVista);
+        int id = (int) modeloTabla.getValueAt(filaModelo, 0);
         String solucion = txtSolucion.getText().trim();
         Fase faseSeleccionada = Fase.fromIndex(cboFase.getSelectedIndex());
 
-        ErrorTicket error = new ErrorTicket(titulo, descripcion, sev, faseSeleccionada);
+        // Obtener datos completos del error desde la BD
+        ErrorTicket previo = gestor.buscarPorId(id);
+        if (previo == null) return;
+
+        ErrorTicket error = new ErrorTicket(previo.getTitulo(), previo.getDescripcion(), previo.getSeveridad(), faseSeleccionada);
         error.setSolucion(solucion);
         error.setId(id);
 
@@ -246,6 +369,7 @@ public class frmTableErrores extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Error actualizado correctamente");
             cargarTabla();
         } catch (Exception ex) {
+            logger.warning("Error al actualizar: " + ex.getMessage());
             JOptionPane.showMessageDialog(this,
                 "Error al actualizar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -264,20 +388,25 @@ public class frmTableErrores extends javax.swing.JFrame {
             for (ErrorTicket e : errores) {
                 agregarFilaTabla(e);
             }
+            actualizarBarraEstado(errores.size());
         } catch (Exception ex) {
+            logger.warning("Error al buscar: " + ex.getMessage());
             JOptionPane.showMessageDialog(this,
                 "Error al buscar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    // ==================== ACCIONES ====================
+
     private void verCaptura() {
-        int fila = jTable1.getSelectedRow();
-        if (fila < 0) {
+        int filaVista = jTable1.getSelectedRow();
+        if (filaVista < 0) {
             JOptionPane.showMessageDialog(this, "Seleccione un error de la tabla");
             return;
         }
 
-        int id = (int) jTable1.getValueAt(fila, 0);
+        int filaModelo = jTable1.convertRowIndexToModel(filaVista);
+        int id = (int) modeloTabla.getValueAt(filaModelo, 0);
         ErrorTicket errorSel = gestor.buscarPorId(id);
 
         if (errorSel == null || errorSel.getCapturaError() == null || errorSel.getCapturaError().isEmpty()) {
@@ -292,17 +421,12 @@ public class frmTableErrores extends javax.swing.JFrame {
         }
 
         JDialog dialogo = new JDialog(this, "Captura: " + errorSel.getTitulo(), true);
-        JLabel lblImagen = new JLabel(imagen);
-        JScrollPane scroll = new JScrollPane(lblImagen);
-        dialogo.add(scroll);
+        dialogo.add(new JScrollPane(new JLabel(imagen)));
         dialogo.setSize(850, 650);
         dialogo.setLocationRelativeTo(this);
         dialogo.setVisible(true);
     }
 
-    /**
-     * Exporta los errores visibles en la tabla a un archivo CSV.
-     */
     private void exportarCSV() {
         try {
             List<ErrorTicket> errores = gestor.obtenerTodosErrores();
@@ -326,14 +450,15 @@ public class frmTableErrores extends javax.swing.JFrame {
                     "Reporte exportado exitosamente:\n" + archivo.getAbsolutePath());
             }
         } catch (Exception ex) {
+            logger.warning("Error al exportar: " + ex.getMessage());
             JOptionPane.showMessageDialog(this,
                 "Error al exportar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void eliminarError() {
-        int fila = jTable1.getSelectedRow();
-        if (fila < 0) {
+        int filaVista = jTable1.getSelectedRow();
+        if (filaVista < 0) {
             JOptionPane.showMessageDialog(this, "Seleccione un error de la tabla");
             return;
         }
@@ -344,16 +469,20 @@ public class frmTableErrores extends javax.swing.JFrame {
 
         if (confirmacion == JOptionPane.YES_OPTION) {
             try {
-                int id = (int) jTable1.getValueAt(fila, 0);
+                int filaModelo = jTable1.convertRowIndexToModel(filaVista);
+                int id = (int) modeloTabla.getValueAt(filaModelo, 0);
                 gestor.eliminarError(id);
                 JOptionPane.showMessageDialog(this, "Error eliminado correctamente");
                 cargarTabla();
             } catch (Exception ex) {
+                logger.warning("Error al eliminar: " + ex.getMessage());
                 JOptionPane.showMessageDialog(this,
                     "Error al eliminar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
+
+    // ==================== GENERATED CODE ====================
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -380,15 +509,8 @@ public class frmTableErrores extends javax.swing.JFrame {
         jPanel1.setBackground(Tema.FONDO);
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
+            new Object [][] {{null, null, null, null}},
+            new String [] {"Title 1", "Title 2", "Title 3", "Title 4"}
         ));
         jScrollPane1.setViewportView(jTable1);
 
@@ -434,58 +556,38 @@ public class frmTableErrores extends javax.swing.JFrame {
 
         jPanel2.setBackground(Tema.PRIMARIO);
         jPanel2.setPreferredSize(new java.awt.Dimension(0, 25));
-
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 25, Short.MAX_VALUE)
-        );
+        jPanel2Layout.setHorizontalGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 0, Short.MAX_VALUE));
+        jPanel2Layout.setVerticalGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 25, Short.MAX_VALUE));
 
         jPanel4.setBackground(Tema.PRIMARIO);
-
+        jPanel4.setPreferredSize(new java.awt.Dimension(0, 28));
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
-        );
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 25, Short.MAX_VALUE)
-        );
+        jPanel4Layout.setHorizontalGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 0, Short.MAX_VALUE));
+        jPanel4Layout.setVerticalGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 28, Short.MAX_VALUE));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 697, Short.MAX_VALUE)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 750, Short.MAX_VALUE)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(34, 34, 34)
-                .addComponent(btnGuardar)
-                .addGap(18, 18, 18)
-                .addComponent(btnEliminar)
-                .addGap(18, 18, 18)
+                .addComponent(btnGuardar).addGap(18, 18, 18)
+                .addComponent(btnEliminar).addGap(18, 18, 18)
                 .addComponent(btnRegresarPrin)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(btnSalir)
-                .addGap(19, 19, 19))
+                .addComponent(btnSalir).addGap(19, 19, 19))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addGap(0, 0, Short.MAX_VALUE)
-                .addComponent(jLabel2)
-                .addGap(312, 312, 312))
-            .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 697, Short.MAX_VALUE)
+                .addGap(0, 0, Short.MAX_VALUE).addComponent(jLabel2).addGap(340, 340, 340))
+            .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, 750, Short.MAX_VALUE)
+            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, 750, Short.MAX_VALUE)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(14, 14, 14)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(30, 30, 30)
-                        .addComponent(jLabel1))
+                    .addGroup(jPanel1Layout.createSequentialGroup().addGap(30, 30, 30).addComponent(jLabel1))
                     .addComponent(cboFase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(55, 55, 55)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -497,46 +599,37 @@ public class frmTableErrores extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(7, 7, 7)
-                .addComponent(jLabel2)
+                .addGap(7, 7, 7).addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(lblSolucion))
+                    .addComponent(jLabel1).addComponent(lblSolucion))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(cboFase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 69, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 50, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnRegresarPrin)
-                    .addComponent(btnGuardar)
-                    .addComponent(btnEliminar)
-                    .addComponent(btnSalir))
-                .addGap(32, 32, 32)
+                    .addComponent(btnRegresarPrin).addComponent(btnGuardar)
+                    .addComponent(btnEliminar).addComponent(btnSalir))
+                .addGap(20, 20, 20)
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
+        layout.setHorizontalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
+        layout.setVerticalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSalirActionPerformed(java.awt.event.ActionEvent evt) {
         int confirmacion = JOptionPane.showConfirmDialog(this,
-                "Esta seguro de que desea salir?", "Confirmar salida",
-                JOptionPane.YES_NO_OPTION);
+                "Esta seguro de que desea salir?", "Confirmar salida", JOptionPane.YES_NO_OPTION);
         if (confirmacion == JOptionPane.YES_OPTION) {
             System.exit(0);
         }
