@@ -1,0 +1,23 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: errores_mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: errores
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./src/Script_BD.sql:/docker-entrypoint-initdb.d/Script_BD.sql
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: errores_phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: ""
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql

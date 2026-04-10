@@ -1,0 +1,7 @@
+*.class
+build/
+capturas/
+.claude/
+*.iml
+.idea/
+nbproject/private/
