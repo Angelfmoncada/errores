@@ -1,7 +1,23 @@
+# Build output
 *.class
 build/
-capturas/
-.claude/
+ErroresProyecto/build/
+ErroresProyecto/dist/
+
+# NetBeans private config
+nbproject/private/
+ErroresProyecto/nbproject/private/
+
+# Downloaded libraries
+ErroresProyecto/lib/
+
+# IDE files
 *.iml
 .idea/
-nbproject/private/
+*.jar
+*.war
+*.ear
+
+# App files
+capturas/
+.claude/

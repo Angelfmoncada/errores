@@ -1,0 +1,20 @@
+Casos de Prueba - Gestor de Errores
+=====================================
+
+ID	Caso				Resultado Esperado
+--	----				------------------
+1	Login admin/admin123		Acceso con todos los botones
+2	Login kimberly/MiClave2026	Acceso como admin
+3	Login visual/visual123		Acceso solo lectura
+4	Login con campos vacios		Mensaje de advertencia
+5	Registrar error (admin)		Guarda en BD
+6	Registrar error (visual)	Boton deshabilitado
+7	Cambiar fase (admin)		Actualiza en BD
+8	Cambiar fase (visual)		Combo deshabilitado
+9	Click Salir en menu		Vuelve al login
+10	Click Salir en login		Cierra la app
+
+Usuarios de prueba:
+- admin    / admin123      (rol: admin)
+- kimberly / MiClave2026   (rol: admin)
+- visual   / visual123     (rol: visual - solo lectura)
